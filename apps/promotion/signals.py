@@ -11,8 +11,14 @@ from .models import Promotion, PromotionScope
 
 def _invalidate(*args, **kwargs):
     from promotion.cache import bump_pricing_version
+    from goods.static_pages import (
+        invalidate_static_pages,
+        schedule_static_pages_refresh,
+    )
 
     transaction.on_commit(bump_pricing_version)
+    transaction.on_commit(invalidate_static_pages)
+    transaction.on_commit(schedule_static_pages_refresh)
 
 
 for _model in (Promotion, PromotionScope):

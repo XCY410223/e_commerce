@@ -12,4 +12,4 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 app = Celery("e_commerce")
 app.config_from_object("django.conf:settings", namespace="CELERY")
-app.autodiscover_tasks(["celery_tasks", "order"])
+app.autodiscover_tasks(["celery_tasks", "order", "goods"])

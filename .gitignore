@@ -12,6 +12,7 @@ env/
 # Django
 db.sqlite3
 /static_collected/
+/static_pages/
 /media/
 /static/index.html
 

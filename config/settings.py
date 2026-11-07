@@ -223,6 +223,33 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "static_collected"
 
+# 页面静态化：首页与分类列表由 Celery 预渲染，匿名且无购物车 Cookie 的请求优先读取。
+STATIC_PAGES_ENABLED = os.getenv("STATIC_PAGES_ENABLED", "1") == "1"
+STATIC_PAGES_ROOT = Path(
+    os.getenv("STATIC_PAGES_ROOT") or (BASE_DIR / "static_pages")
+)
+STATIC_PAGES_AUTO_REFRESH = (
+    os.getenv("STATIC_PAGES_AUTO_REFRESH", "0" if DEBUG else "1") == "1"
+)
+STATIC_PAGES_REFRESH_INTERVAL = int(
+    os.getenv("STATIC_PAGES_REFRESH_INTERVAL", "300")
+)
+STATIC_PAGES_DEBOUNCE_SECONDS = int(
+    os.getenv("STATIC_PAGES_DEBOUNCE_SECONDS", "15")
+)
+# 每个分类/排序最多生成的页数，防止异常数据把构建任务拖垮；超出部分回退动态页。
+STATIC_PAGES_MAX_LIST_PAGES = int(
+    os.getenv("STATIC_PAGES_MAX_LIST_PAGES", "500")
+)
+# 单次构建允许生成的总页数上限，防止分类数增长导致内存和磁盘失控。
+STATIC_PAGES_MAX_TOTAL_PAGES = int(
+    os.getenv("STATIC_PAGES_MAX_TOTAL_PAGES", "2000")
+)
+# 构建锁有效期（秒）：防止 Celery beat 与数据变更任务并发发布。
+STATIC_PAGES_BUILD_LOCK_SECONDS = int(
+    os.getenv("STATIC_PAGES_BUILD_LOCK_SECONDS", "600")
+)
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -302,6 +329,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": float(ORDER_CANCEL_CHECK_INTERVAL),
     },
 }
+if STATIC_PAGES_ENABLED and STATIC_PAGES_REFRESH_INTERVAL > 0:
+    CELERY_BEAT_SCHEDULE["refresh-static-pages"] = {
+        "task": "goods.generate_static_pages",
+        "schedule": float(STATIC_PAGES_REFRESH_INTERVAL),
+    }
 
 
 # --------------------------------------------------------------------------

@@ -1,12 +1,11 @@
 """商品模块视图（骨架实现）。
 
-已完成：首页楼层、分类列表（排序 + 分页）、Redis 页面缓存、商品详情、
-全文搜索（MySQL FULLTEXT + ngram）、浏览历史读写。
-待补：首页静态化；全文检索可选升级 Haystack / Elasticsearch。
+已完成：首页楼层、分类列表（排序 + 分页）、Redis 页面缓存、页面静态化、
+商品详情、全文搜索（MySQL FULLTEXT + ngram）、浏览历史读写。
+后续可选：全文检索升级 Haystack / Elasticsearch。
 """
 
 import logging
-from collections import defaultdict
 
 from django.conf import settings
 from django.core.cache import caches
@@ -27,14 +26,15 @@ from promotion.cache import pricing_version
 from promotion.services import decorate_skus_with_prices
 
 from .history import read_history, record_history
-from .models import (
-    GoodsSKU,
-    GoodsType,
-    IndexGoodsBanner,
-    IndexPromotionBanner,
-    IndexTypeGoodsBanner,
-)
+from .models import GoodsSKU, GoodsType, IndexPromotionBanner
+from .queries import list_queryset
 from .search import SORT_RELEVANCE, VALID_SORTS, normalize_keyword, search_skus
+from .static_pages import (
+    INDEX_PAGE,
+    build_index_context,
+    serve_static_page,
+    static_list_page_name_for_request,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,53 +50,16 @@ def _get_cached_fragment(fragment_name, vary_on=()):
 
 def index(request):
     """首页：轮播 + 促销 + 各分类楼层。"""
+    static_response = serve_static_page(request, INDEX_PAGE)
+    if static_response is not None:
+        return static_response
+
     cached_content = _get_cached_fragment("goods_index")
     if cached_content is not None:
         return render(request, "index.html", {"cached_content": cached_content})
 
-    types = list(GoodsType.objects.all())
-    type_banners_by_type = defaultdict(list)
-    type_banners = (
-        IndexTypeGoodsBanner.objects.filter(
-            type_id__in=[goods_type.id for goods_type in types],
-            display_type=IndexTypeGoodsBanner.DISPLAY_TYPE_SKU,
-            sku__status=GoodsSKU.STATUS_ONLINE,
-            sku__is_delete=False,
-        )
-        .select_related("sku")
-        .prefetch_related("sku__images")
-        .order_by("type_id", "index")
-    )
-    for banner in type_banners:
-        bucket = type_banners_by_type[banner.type_id]
-        if len(bucket) < 4:
-            bucket.append(banner)
-    for goods_type in types:
-        goods_type.banners = type_banners_by_type[goods_type.id]
-
-    goods_banners = list(
-        IndexGoodsBanner.objects.filter(
-            sku__status=GoodsSKU.STATUS_ONLINE,
-            sku__is_delete=False,
-        )
-        .select_related("sku")
-        .prefetch_related("sku__images")
-        .order_by("index")[:4]
-    )
-    promotion_banners = list(
-        IndexPromotionBanner.objects.filter(is_active=True).order_by("index")[:4]
-    )
-    banner_skus = [banner.sku for banner in goods_banners]
-    for goods_type in types:
-        banner_skus.extend(banner.sku for banner in goods_type.banners)
-    decorate_skus_with_prices(banner_skus)
-
-    context = {
-        "types": types,
-        "goods_banners": goods_banners,
-        "promotion_banners": promotion_banners,
-        "index_cache_ttl": settings.GOODS_INDEX_CACHE_TTL,
-    }
+    context = build_index_context()
+    context["index_cache_ttl"] = settings.GOODS_INDEX_CACHE_TTL
     return render(request, "index.html", context)
 
 
@@ -170,6 +133,14 @@ class GoodsListView(PaginationContextMixin, ListView):
     page_kwarg = "page"
 
     def get(self, request, *args, **kwargs):
+        static_name = static_list_page_name_for_request(
+            request, self.kwargs["type_id"]
+        )
+        if static_name:
+            static_response = serve_static_page(request, static_name)
+            if static_response is not None:
+                return static_response
+
         self.goods_type = get_object_or_404(GoodsType, id=self.kwargs["type_id"])
         self.sort = request.GET.get("sort", "default")
         self.promotion_price_version = pricing_version()
@@ -194,12 +165,7 @@ class GoodsListView(PaginationContextMixin, ListView):
             self.goods_type = get_object_or_404(GoodsType, id=self.kwargs["type_id"])
         if not hasattr(self, "sort"):
             self.sort = self.request.GET.get("sort", "default")
-        queryset = GoodsSKU.objects.online().filter(type=self.goods_type).prefetch_related("images")
-        if self.sort == "price":
-            queryset = queryset.order_by("price")
-        elif self.sort == "sales":
-            queryset = queryset.order_by("-sales")
-        return queryset
+        return list_queryset(self.goods_type, self.sort)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

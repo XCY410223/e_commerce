@@ -15,6 +15,7 @@ from .models import (
     IndexPromotionBanner,
     IndexTypeGoodsBanner,
 )
+from .static_pages import invalidate_static_pages, schedule_static_pages_refresh
 
 _CACHE_MODELS = (
     GoodsType,
@@ -28,6 +29,8 @@ _CACHE_MODELS = (
 
 def _cache_write(sender, using=None, **kwargs):
     transaction.on_commit(invalidate_goods_page_cache, using=using)
+    transaction.on_commit(invalidate_static_pages)
+    transaction.on_commit(schedule_static_pages_refresh)
     if sender is GoodsType:
         transaction.on_commit(invalidate_goods_nav_cache, using=using)
 
@@ -48,5 +51,7 @@ for _model in _CACHE_MODELS:
 @receiver(soft_delete_completed, dispatch_uid="goods-cache-soft-delete")
 def _cache_soft_delete(sender, models=None, using=None, **kwargs):
     transaction.on_commit(invalidate_goods_page_cache, using=using)
+    transaction.on_commit(invalidate_static_pages)
+    transaction.on_commit(schedule_static_pages_refresh)
     if models and "goods.GoodsType" in models:
         transaction.on_commit(invalidate_goods_nav_cache, using=using)

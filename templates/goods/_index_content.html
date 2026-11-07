@@ -1,0 +1,73 @@
+<div class="hero">
+    <div class="hero-banner" data-banner-carousel>
+        {% for banner in goods_banners %}
+            <a class="hero-slide{% if forloop.first %} active{% endif %}" href="{% url 'goods:detail' banner.sku.id %}">
+                {% if banner.image %}
+                    <img src="{{ banner.image.url }}" alt="{{ banner.sku.name }}"
+                         width="900" height="260" decoding="async"
+                         {% if forloop.first %}fetchpriority="high" loading="eager"{% else %}loading="lazy"{% endif %}>
+                {% else %}
+                    <span>{{ banner.sku.name }}</span>
+                {% endif %}
+            </a>
+        {% empty %}
+            <span class="muted">暂无轮播商品，请到后台「首页轮播商品」中添加</span>
+        {% endfor %}
+        {% if goods_banners|length > 1 %}
+            <div class="hero-dots" aria-label="轮播图切换">
+                {% for banner in goods_banners %}
+                    <button type="button" class="hero-dot{% if forloop.first %} active{% endif %}"
+                            data-banner-index="{{ forloop.counter0 }}"
+                            aria-label="第 {{ forloop.counter }} 张轮播图"></button>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="hero-side">
+        {% for p in promotion_banners %}
+            <a href="{{ p.get_absolute_url }}">
+                {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}" width="240" height="80"
+                                     loading="lazy" decoding="async" style="height:80px;object-fit:cover;">
+                {% else %}{{ p.name }}{% endif %}
+            </a>
+        {% empty %}
+            <a href="#" class="muted">暂无促销活动</a>
+        {% endfor %}
+    </div>
+</div>
+
+{% for t in types %}
+    <section class="floor">
+        <div class="floor-head">
+            <h3>{{ t.name }}</h3>
+            <a class="muted" href="{% url 'goods:list' t.id %}">查看更多 &gt;</a>
+        </div>
+        <div class="grid grid-5">
+            {% for b in t.banners %}
+                {% with sku=b.sku %}
+                    <a class="goods-card" href="{% url 'goods:detail' sku.id %}">
+                        <div class="thumb">
+                            {% if sku.primary_image %}<img src="{{ sku.primary_image.url }}" alt="{{ sku.name }}"
+                                                          width="150" height="150" loading="lazy" decoding="async">
+                            {% else %}<span>暂无图片</span>{% endif %}
+                        </div>
+                        <div class="name">{{ sku.name }}</div>
+                        {% if sku.has_promotion_price %}
+                            <div class="price">¥{{ sku.effective_price }}<small>/{{ sku.unite }}</small></div>
+                            <div class="price-original">¥{{ sku.original_price }}</div>
+                            <div class="promo-tag">{{ sku.promotion_name }}</div>
+                        {% else %}
+                            <div class="price">¥{{ sku.price }}<small>/{{ sku.unite }}</small></div>
+                        {% endif %}
+                    </a>
+                {% endwith %}
+            {% empty %}
+                <div class="muted">该分类暂无展示商品</div>
+            {% endfor %}
+        </div>
+    </section>
+{% empty %}
+    <div class="card empty">
+        还没有商品数据。执行 <code>.venv\Scripts\python.exe scripts\seed.py</code> 可一键灌入演示数据。
+    </div>
+{% endfor %}

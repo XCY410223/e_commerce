@@ -25,13 +25,16 @@ python manage.py migrate
 #    注意：--reset 会清空订单、地址和非超管用户；库里有需要保留的订单时不要执行
 python scripts/seed.py --reset
 
-# 6. 启动
+# 6. 预生成首页与分类列表静态页（匿名访客命中；生产由 Celery 重建）
+python manage.py build_static_pages
+
+# 7. 启动
 python manage.py runserver 127.0.0.1:8000
 
-# 7. 另开终端启动 Celery worker（Windows 必须加 --pool=solo）
+# 8. 另开终端启动 Celery worker（激活邮件、静态页重建；Windows 必须加 --pool=solo）
 celery -A config.celery worker -l info --pool=solo
 
-# 8. 再另开终端启动定时任务（超时订单取消、支付对账）
+# 9. 再另开终端启动定时任务（超时订单取消、支付对账、静态页兜底重建）
 celery -A config.celery beat -l info
 ```
 
@@ -171,6 +174,16 @@ e_commerce/
 - 首页轮播只展示已上架、未软删除的 SKU；分类楼层与分类列表同样过滤 `status=STATUS_ONLINE`。
 - 后台保存或删除商品种类、SKU、商品图片、首页轮播、促销活动和分类展示记录后，通过 `post_save` / `post_delete` 信号主动清除首页及分类列表缓存；软删除通过 `soft_delete_completed` 信号触发同样的清理。
 - 商品种类变化会同时清除顶部导航缓存；导航仅缓存 `id/name`，默认 300 秒，可通过 `GOODS_NAV_CACHE_TTL` 调整。
+
+**页面静态化**
+
+- 首页和分类列表支持预生成 HTML：匿名且无 `sessionid`、无 `guest_cart` Cookie 的 `GET/HEAD` 请求优先读取静态页。
+- 登录用户、游客购物车用户、未知查询参数、非法页码或文件缺失时自动回退动态视图，避免用户态内容和 CSRF 信息被公共缓存复用。
+- 静态命中响应带 `X-Static-Page: hit`、`Cache-Control: no-cache, must-revalidate` 和 `Vary: Cookie`；Nginx/CDN 不要无条件缓存带 Cookie 的响应。
+- 商品、分类、图片、轮播、促销或促销范围变化后，旧静态页立即下架，Celery 任务 `goods.generate_static_pages` 异步重建；Celery Beat 默认每 300 秒兜底重建。
+- 手工构建：`python manage.py build_static_pages`。生成结果写入 `STATIC_PAGES_ROOT`（默认 `static_pages/`，已被 `.gitignore` 忽略），`manifest.json` 记录页数、耗时、跳过页数和构建 ID。
+- 关键配置：`STATIC_PAGES_ENABLED`、`STATIC_PAGES_AUTO_REFRESH`、`STATIC_PAGES_ROOT`、`STATIC_PAGES_REFRESH_INTERVAL`、`STATIC_PAGES_DEBOUNCE_SECONDS`、`STATIC_PAGES_MAX_LIST_PAGES`、`STATIC_PAGES_MAX_TOTAL_PAGES`。
+- 完整的安全、监控与回滚说明见 `docs/static-pages-runbook.md`。
 
 **首页轮播与图片**
 
@@ -312,10 +325,10 @@ python manage.py alipay_sandbox_link <订单号> \
 | P1 骨架修复 | settings/urls 六处阻断缺陷、四个 AppConfig | ✅ |
 | P2 数据层 | 12 个 Model + 全局软删除过滤 + AUTH_USER_MODEL + 迁移 | ✅ 已落库 |
 | P3 用户模块 | 注册/邮件激活/登录/退出/个人中心/地址 CRUD | ✅ |
-| P4 商品模块 | 首页楼层/分类列表/详情（规格切换）/全文搜索/浏览历史 | ✅（首页/分类列表 Redis 片段缓存；静态化待补） |
+| P4 商品模块 | 首页楼层/分类列表/详情（规格切换）/全文搜索/浏览历史 | ✅（首页/分类列表 Redis 片段缓存 + 匿名静态页） |
 | P5 购物车 | Redis Hash、库存/上架校验、滑动 TTL、幂等清理与补偿、游客购物车与登录合并 | ✅ |
 | P6 订单模块 | 确认页/事务下单/升序加锁/死锁重试/用户级串行化/提交幂等/扣库存/订单列表/订单详情/快照/支付结果/超时取消与库存回补/订单评论提交与审核 | ✅（mock 收银台；真实支付宝需安装 SDK 并配置商户密钥） |
-| P7 后台与静态化 | admin 注册、富文本 | ⏳ 待做 Celery 静态化 |
+| P7 后台与静态化 | admin 注册、富文本、Celery 首页/分类列表静态化 | ✅ |
 | P8 文件存储 | FastDFS + Nginx + Django 存储后端 | ✅（Docker Desktop 运行时生效） |
 | P9 联调验收 | 冒烟脚本 32 项（含订单详情与模拟支付链路） | ✅ |
 | P10 促销交易接入 | 统一算价、订单优惠快照、免运费、周末折扣、新客券；邀请活动已下线 | ✅ |
@@ -325,6 +338,8 @@ python manage.py alipay_sandbox_link <订单号> \
 ```bash
 python manage.py check                        # 无报错
 python manage.py makemigrations --check --dry-run   # No changes detected
+python manage.py build_static_pages           # 生成首页/分类列表静态页并输出耗时
+python manage.py test goods.tests -v 2        # 静态化生成/命中/回退/边界/并发保护
 python manage.py test order.tests.OrderCommentTests -v 2   # 评论提交/审核/越权/展示
 python manage.py test -v 2                    # 单元测试 + HTTP 加购下单链路
 python manage.py promotion_status --strict    # 促销配置与金额快照巡检
@@ -351,3 +366,6 @@ python manage.py retry_cart_cleanup           # 重试 Redis 清理失败的购�
    可改用 `EMAIL_PORT=465`、`EMAIL_USE_SSL=1`、`EMAIL_USE_TLS=0`。
 7. **订单评论旧列不要急着删**：`OrderGoods.comment` 本版本保留用于回滚，历史数据已迁移到
    `df_order_comment`。确认线上稳定并完成备份后再走下一版删除列，避免回滚时旧代码找不到字段。
+8. **静态页目录不要提交**：`static_pages/` 已被 `.gitignore` 忽略；页面里的图片地址取构建时的
+   `FDFS_URL`，公开仓库或生产构建前先确认媒体域名是对外地址。Celery Beat 只启动一个实例，
+   构建锁只是兜底，不是多实例调度的替代方案。
