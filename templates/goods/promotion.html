@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ promotion.name }} - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="promo-hero">
+    <div class="promo-hero-media">
+        {% if promotion.image %}
+            <img src="{{ promotion.image.url }}" alt="{{ promotion.name }}"
+                 width="400" height="160" fetchpriority="high" loading="eager" decoding="async">
+        {% else %}
+            <div class="promo-hero-placeholder">{{ promotion.name }}</div>
+        {% endif %}
+    </div>
+    <div class="promo-hero-body">
+        <div class="muted"><a href="{% url 'goods:index' %}">首页</a> / 促销活动</div>
+        <h1>{{ promotion.name }}</h1>
+        {% if promotion.summary %}<p class="promo-summary">{{ promotion.summary }}</p>{% endif %}
+        {% if rule_promotion %}
+            <p class="promo-window">
+                {% if promotion_live %}<span class="promo-live">活动进行中</span>{% else %}<span class="status-cancelled">活动未开始或已结束</span>{% endif %}
+                {% if rule_promotion.start_at %} · 开始 {{ rule_promotion.start_at|date:"Y-m-d H:i" }}{% endif %}
+                {% if rule_promotion.end_at %} · 结束 {{ rule_promotion.end_at|date:"Y-m-d H:i" }}{% endif %}
+            </p>
+        {% endif %}
+        <div class="promo-actions">
+            <a class="btn btn-primary btn-lg" href="{{ cta_url }}">{{ promotion.cta_text|default:"立即选购" }}</a>
+        </div>
+    </div>
+</div>
+
+{% if promotion.rules %}
+<div class="card">
+    <h2 class="card-title">活动规则</h2>
+    <div class="promo-rules">{{ promotion.rules|linebreaks }}</div>
+</div>
+{% endif %}
+
+{% if promotion.category %}
+<div class="card">
+    <div class="floor-head">
+        <h2 class="card-title mt0">参与商品</h2>
+        <a class="muted" href="{% url 'goods:list' promotion.category.id %}">查看全部 {{ promotion.category.name }} &gt;</a>
+    </div>
+    <div class="grid grid-5">
+        {% for sku in products %}
+            <a class="goods-card" href="{% url 'goods:detail' sku.id %}">
+                <div class="thumb">
+                    {% if sku.primary_image %}
+                        <img src="{{ sku.primary_image.url }}" alt="{{ sku.name }}"
+                             width="150" height="150" loading="lazy" decoding="async">
+                    {% else %}
+                        <span>暂无图片</span>
+                    {% endif %}
+                </div>
+                <div class="name">{{ sku.name }}</div>
+                {% if sku.has_promotion_price %}
+                    <div class="price">¥{{ sku.effective_price }}<small>/{{ sku.unite }}</small></div>
+                    <div class="price-original">¥{{ sku.original_price }}</div>
+                    <div class="promo-tag">{{ sku.promotion_name }}</div>
+                {% else %}
+                    <div class="price">¥{{ sku.price }}<small>/{{ sku.unite }}</small></div>
+                {% endif %}
+                <div class="muted">已售 {{ sku.sales }} 件</div>
+            </a>
+        {% empty %}
+            <div class="muted">该活动暂无上架商品</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if other_promotions %}
+<div class="card">
+    <h2 class="card-title">更多活动</h2>
+    <div class="promo-more">
+        {% for item in other_promotions %}
+            <a href="{{ item.get_absolute_url }}">{{ item.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

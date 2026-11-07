@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}模拟收银台 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card form-box" style="width:560px">
+    <h2>模拟收银台</h2>
+    <div class="msg msg-info">
+        当前为本地开发支付通道（PAYMENT_PROVIDER=mock），不会产生真实扣款。
+    </div>
+
+    <table class="list" style="margin-top:16px">
+        <tr><th style="width:110px">订单号</th><td>{{ order.order_id }}</td></tr>
+        <tr><th>应付总额</th><td style="color:#e4393c;font-weight:700;font-size:18px">¥{{ order.total_pay }}</td></tr>
+        <tr><th>支付方式</th><td>{{ order.get_pay_method_display }}</td></tr>
+        <tr><th>收货信息</th><td>{{ order.addr.receiver }} {{ order.addr.phone }} —— {{ order.addr.addr }}</td></tr>
+    </table>
+
+    <form method="post" action="{% url 'order:mock_pay_success' order.order_id %}" style="margin-top:20px">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit">模拟支付成功</button>
+        <a class="btn" href="{% url 'order:list' %}">暂不支付</a>
+    </form>
+</div>
+{% endblock %}

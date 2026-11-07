@@ -1,0 +1,62 @@
+name: ecommerce-fastdfs
+
+services:
+  fastdfs-tracker:
+    image: ${FASTDFS_IMAGE:-delron/fastdfs:latest}
+    container_name: ecommerce-fastdfs-tracker
+    restart: unless-stopped
+    command: tracker
+    volumes:
+      - fastdfs-tracker:/var/fdfs
+    expose:
+      - "22122"
+
+  fastdfs-storage:
+    image: ${FASTDFS_IMAGE:-delron/fastdfs:latest}
+    container_name: ecommerce-fastdfs-storage
+    restart: unless-stopped
+    command: storage
+    environment:
+      TRACKER_SERVER: fastdfs-tracker:22122
+      GROUP_NAME: group1
+    volumes:
+      - fastdfs-storage:/var/fdfs
+    expose:
+      - "8888"
+      - "23000"
+    depends_on:
+      - fastdfs-tracker
+
+  fastdfs-uploader:
+    image: ${FASTDFS_UPLOADER_IMAGE:-python:3.12-alpine}
+    container_name: ecommerce-fastdfs-uploader
+    restart: unless-stopped
+    command: ["python", "/app/server.py"]
+    environment:
+      TRACKER_SERVER: fastdfs-tracker:22122
+      FDFS_UPLOAD_TOKEN: ${FDFS_UPLOAD_TOKEN:-dev-fastdfs-token}
+      MAX_UPLOAD_BYTES: ${FDFS_MAX_UPLOAD_BYTES:-104857600}
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./docker/fastdfs/uploader:/app:ro
+    expose:
+      - "8889"
+    depends_on:
+      - fastdfs-storage
+
+  fastdfs-nginx:
+    image: ${NGINX_IMAGE:-nginx:1.27-alpine}
+    container_name: ecommerce-fastdfs-nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - ./docker/fastdfs/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - fastdfs-storage
+      - fastdfs-uploader
+
+volumes:
+  fastdfs-tracker:
+  fastdfs-storage:

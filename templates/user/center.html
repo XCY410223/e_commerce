@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}个人中心 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="card-title">账户信息</h3>
+    <table class="list">
+        <tr><th style="width:120px">用户名</th><td>{{ user.username }}</td></tr>
+        <tr><th>邮箱</th><td>{{ user.email|default:"未填写" }}</td></tr>
+        <tr><th>注册时间</th><td>{{ user.create_time|date:"Y-m-d H:i" }}</td></tr>
+        <tr><th>账号状态</th><td>{% if user.is_active %}<span class="status-paid">已激活</span>{% else %}<span class="status-unpaid">未激活</span>{% endif %}</td></tr>
+    </table>
+    <p style="margin-top:14px">
+        <a class="btn" href="{% url 'user:address' %}">管理收货地址</a>
+        <a class="btn" href="{% url 'order:list' %}">我的订单</a>
+    </p>
+</div>
+
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">我的优惠券</h3>
+        <span class="muted">可用 {{ available_coupons|length }} 张</span>
+    </div>
+    <div class="coupon-list">
+        {% for c in coupons %}
+            <div class="coupon-choice {% if c.is_available %}active{% endif %}">
+                <b>{{ c.title }}</b>
+                <span>减 ¥{{ c.discount_amount }}{% if c.min_amount > 0 %}，满 ¥{{ c.min_amount }} 可用{% endif %}</span>
+                <small>{{ c.status_label }} · 有效期至 {{ c.expires_at|date:"Y-m-d H:i" }}</small>
+                {% if c.used_order %}<small>订单 {{ c.used_order.order_id }}</small>{% endif %}
+            </div>
+        {% empty %}
+            <span class="muted">暂无优惠券。新用户激活后会获得新人券。</span>
+        {% endfor %}
+    </div>
+</div>
+
+{% if referral_available %}
+<div class="card">
+    <h3 class="card-title">邀请好友</h3>
+    <p class="muted">好友通过以下链接注册并完成首单支付后，你将获得一张邀请奖励券。</p>
+    <div class="field">
+        <label for="referral-url">专属邀请链接</label>
+        <input id="referral-url" type="text" value="{{ referral_url }}" readonly onclick="this.select()">
+    </div>
+    <p>
+        邀请人数 {{ referral_summary.total }}；
+        待首单 {{ referral_summary.pending }}；
+        已发放 {{ referral_summary.rewarded }}。
+    </p>
+    <table class="list">
+        <thead><tr><th>好友</th><th>状态</th><th>绑定时间</th><th>完成时间</th></tr></thead>
+        <tbody>
+        {% for r in referrals %}
+            <tr>
+                <td>{{ r.invitee.username }}</td>
+                <td>{{ r.get_status_display }}</td>
+                <td>{{ r.create_time|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.completed_at|date:"Y-m-d H:i"|default:"-" }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4" class="muted">还没有邀请记录</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3 class="card-title">默认收货地址</h3>
+    {% if default_address %}
+        <p>{{ default_address.receiver }} {{ default_address.phone }} —— {{ default_address.addr }}</p>
+    {% else %}
+        <p class="muted">还没有收货地址，<a href="{% url 'user:address' %}">去添加</a></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 class="card-title">最近浏览</h3>
+    <div class="grid grid-5">
+        {% for sku in history_skus %}
+            <a class="goods-card" href="{% url 'goods:detail' sku.id %}">
+                <div class="thumb">
+                    {% if sku.primary_image %}<img src="{{ sku.primary_image.url }}" alt="{{ sku.name }}"
+                                                   width="150" height="150" loading="lazy" decoding="async">{% else %}<span>暂无图片</span>{% endif %}
+                </div>
+                <div class="name">{{ sku.name }}</div>
+                <div class="price">¥{% if sku.has_promotion_price %}{{ sku.effective_price }}{% else %}{{ sku.price }}{% endif %}</div>
+                {% if sku.has_promotion_price %}<div class="promo-tag">{{ sku.promotion_name }}</div>{% endif %}
+            </a>
+        {% empty %}
+            <p class="muted" style="margin:0">还没有浏览记录（浏览记录存在 Redis，需先访问商品详情页）</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">最近订单</h3>
+        <a class="muted" href="{% url 'order:list' %}">全部订单 &gt;</a>
+    </div>
+    <table class="list">
+        <thead>
+        <tr><th>订单号</th><th>金额</th><th>状态</th><th>下单时间</th><th>支付时间</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {% for o in recent_orders %}
+            <tr>
+                <td><a href="{% url 'order:detail' o.order_id %}">{{ o.order_id }}</a></td>
+                <td>¥{{ o.display_amount }}</td>
+                <td><span class="{{ o.status_css_class }}">{{ o.status_label }}</span></td>
+                <td>{{ o.create_time|date:"Y-m-d H:i" }}</td>
+                <td>{{ o.pay_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                <td>
+                    {% if o.is_unpaid %}
+                        <a class="btn btn-primary" href="{% url 'order:pay' o.order_id %}">去支付</a>
+                    {% endif %}
+                    <a class="btn" href="{% url 'order:detail' o.order_id %}">查看详情</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="muted">暂无订单</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>激活天天生鲜账号</title>
+</head>
+<body style="margin:0;padding:24px;background:#f6f7f8;font-family:Arial,'Microsoft YaHei',sans-serif;color:#333;">
+    <div style="max-width:560px;margin:0 auto;padding:32px;background:#fff;border-radius:8px;">
+        <h2 style="margin-top:0;color:#37ab40;">激活您的天天生鲜账号</h2>
+        <p>您好，{{ username }}：</p>
+        <p>感谢您注册天天生鲜。请在 {{ expire_hours }} 小时内点击下面的链接激活账号：</p>
+        <p style="margin:28px 0;">
+            <a href="{{ activation_url }}" style="display:inline-block;padding:12px 24px;border-radius:5px;background:#37ab40;color:#fff;text-decoration:none;">立即激活账号</a>
+        </p>
+        <p style="font-size:13px;color:#666;word-break:break-all;">
+            如果按钮无法点击，请复制以下链接到浏览器打开：<br>
+            {{ activation_url }}
+        </p>
+        <p style="font-size:13px;color:#999;">激活链接包含您的身份信息与有效期，请勿转发给他人。如果不是您本人操作，请忽略此邮件。</p>
+    </div>
+</body>
+</html>

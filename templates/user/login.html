@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card form-box">
+    <h2>用户登录</h2>
+
+    {% if error %}<div class="msg msg-error">{{ error }}</div>{% endif %}
+
+    <form method="post" action="{% url 'user:login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="field">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" value="{{ username|default:'' }}" required autofocus>
+        </div>
+        <div class="field">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="field remember-field">
+            <input type="checkbox" id="remember" name="remember" value="on" {% if remember_username %}checked{% endif %}>
+            <label for="remember">记住用户名</label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">登 录</button>
+        </div>
+    </form>
+
+    <p class="form-foot">还没有账号？<a href="{% url 'user:register' %}">立即注册</a></p>
+</div>
+{% endblock %}

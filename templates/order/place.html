@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}确认订单 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="card-title">收货地址</h3>
+    {% if addresses %}
+        <div class="addr-list">
+            {% for a in addresses %}
+                <div class="addr-item {% if a.id == default_address.id %}active{% endif %}" data-addr-id="{{ a.id }}">
+                    <div class="who">{{ a.receiver }}<span>{{ a.phone }}</span></div>
+                    <div class="muted">{{ a.addr }}</div>
+                    {% if a.is_default %}<div class="status-paid" style="margin-top:6px">默认地址</div>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <p class="muted">还没有想要的地址？<a href="{% url 'user:address' %}">去新增</a></p>
+    {% else %}
+        <p>还没有收货地址，<a href="{% url 'user:address' %}">请先添加</a></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 class="card-title">商品清单</h3>
+    <table class="list">
+        <thead>
+        <tr><th>商品</th><th style="width:120px">单价</th><th style="width:80px">数量</th><th style="width:120px">小计</th></tr>
+        </thead>
+        <tbody>
+        {% for item in quote.lines %}
+            <tr>
+                <td><a href="{% url 'goods:detail' item.sku.id %}">{{ item.sku.name }}</a></td>
+                <td>
+                    {% if item.has_discount %}
+                        <span class="price-promo">¥{{ item.unit_price }}</span>
+                        <div class="price-original">¥{{ item.original_unit_price }}</div>
+                        <div class="promo-tag">{{ item.promotion_name }}</div>
+                    {% else %}
+                        ¥{{ item.unit_price }}
+                    {% endif %}
+                </td>
+                <td>{{ item.count }}</td>
+                <td>¥{{ item.amount }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">优惠券</h3>
+        <a class="muted" href="{% url 'user:center' %}">查看我的券 &gt;</a>
+    </div>
+    <div class="coupon-list">
+        <a class="coupon-choice {% if not selected_coupon_id %}active{% endif %}" href="?coupon_id=0">
+            <b>不使用优惠券</b>
+            <span>按当前活动价结算</span>
+        </a>
+        {% for c in coupons %}
+            <a class="coupon-choice {% if selected_coupon_id == c.id %}active{% endif %}"
+               href="?coupon_id={{ c.id }}">
+                <b>{{ c.title }}</b>
+                <span>减 ¥{{ c.discount_amount }}{% if c.min_amount > 0 %}，满 ¥{{ c.min_amount }} 可用{% endif %}</span>
+                <small>有效期至 {{ c.expires_at|date:"Y-m-d" }}</small>
+            </a>
+        {% empty %}
+            <span class="muted">暂无可用优惠券</span>
+        {% endfor %}
+    </div>
+    {% if selected_coupon_id %}<p class="muted">已选择优惠券，提交订单时服务端会再次校验资格与使用状态。</p>{% endif %}
+</div>
+
+<div class="card">
+    <h3 class="card-title">支付方式</h3>
+    <form method="post" action="{% url 'order:commit' %}" id="order-form">
+        {% csrf_token %}
+        <input type="hidden" name="addr_id" value="{{ default_address.id|default:'' }}">
+        <input type="hidden" name="submit_token" value="{{ submit_token }}">
+        <input type="hidden" name="expected_count" value="{{ total_count }}">
+        <input type="hidden" name="expected_amount" value="{{ quote.total_pay }}">
+        <input type="hidden" name="coupon_id" value="{{ selected_coupon_id|default:0 }}">
+        <input type="hidden" name="expected_fingerprint" value="{{ cart_fingerprint }}">
+
+        <div class="form-row">
+            {% for value, label in pay_choices %}
+                <label style="width:auto;margin-right:18px">
+                    <input type="radio" name="pay_method" value="{{ value }}"
+                           {% if forloop.first %}checked{% endif %}> {{ label }}
+                </label>
+            {% endfor %}
+        </div>
+
+        <div class="cart-total">
+            <span class="muted">共 <b>{{ total_count }}</b> 件商品</span>
+            <span class="muted">商品原价：¥{{ quote.goods_original_total }}</span>
+            {% if quote.item_discount > 0 %}<span class="muted discount-line">商品优惠：-¥{{ quote.item_discount }}</span>{% endif %}
+            {% if quote.coupon_discount > 0 %}<span class="muted discount-line">优惠券：-¥{{ quote.coupon_discount }}</span>{% endif %}
+            <span class="muted">运费：¥{{ quote.shipping_fee }}{% if quote.shipping_discount > 0 %}（已减 ¥{{ quote.shipping_discount }}）{% endif %}</span>
+            <span>应付：<span class="amount">¥{{ quote.total_pay }}</span></span>
+            <button class="btn btn-primary btn-lg" type="submit"
+                    {% if not default_address %}disabled title="请先添加收货地址"{% endif %}>提交订单</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

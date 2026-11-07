@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}收货地址 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">我的收货地址</h3>
+        <a class="muted" href="{% url 'user:center' %}">返回用户中心 &gt;</a>
+    </div>
+    <table class="list">
+        <thead>
+        <tr><th>收件人</th><th>地址</th><th>联系电话</th><th>邮编</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {% for a in addresses %}
+            <tr>
+                <td>{{ a.receiver }}{% if a.is_default %} <span class="status-paid">默认</span>{% endif %}</td>
+                <td>{{ a.addr }}</td>
+                <td>{{ a.phone }}</td>
+                <td>{{ a.zip_code|default:"-" }}</td>
+                <td>
+                    {% if not a.is_default %}
+                    <form method="post" style="display:inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="set_default">
+                        <input type="hidden" name="addr_id" value="{{ a.id }}">
+                        <button class="btn" type="submit">设为默认</button>
+                    </form>
+                    {% endif %}
+                    <a class="btn" href="{% url 'user:address' %}?edit={{ a.id }}#address-form">编辑</a>
+                    <form method="post" style="display:inline" onsubmit="return confirm('确定删除该地址？')">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="addr_id" value="{{ a.id }}">
+                        <button class="btn btn-danger" type="submit">删除</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="muted">还没有收货地址，请在下方添加</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" id="address-form">
+    <h3 class="card-title">{% if edit_address %}编辑地址{% else %}新增地址{% endif %}</h3>
+    {% if error %}<div class="msg msg-error">{{ error }}</div>{% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {% if edit_address %}
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="addr_id" value="{{ edit_address.id }}">
+        {% else %}
+            <input type="hidden" name="action" value="create">
+        {% endif %}
+        <div class="field">
+            <label for="receiver">收件人</label>
+            <input type="text" id="receiver" name="receiver" value="{{ form_data.receiver|default:'' }}" required>
+        </div>
+        <div class="field">
+            <label for="addr">详细地址</label>
+            <input type="text" id="addr" name="addr" value="{{ form_data.addr|default:'' }}" required>
+        </div>
+        <div class="field">
+            <label for="phone">联系电话</label>
+            <input type="text" id="phone" name="phone" maxlength="11" value="{{ form_data.phone|default:'' }}" required>
+        </div>
+        <div class="field">
+            <label for="zip_code">邮编</label>
+            <input type="text" id="zip_code" name="zip_code" maxlength="6" placeholder="可留空" value="{{ form_data.zip_code|default:'' }}">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{% if edit_address %}保存修改{% else %}保存地址{% endif %}</button>
+            {% if edit_address %}<a class="btn" href="{% url 'user:address' %}">取消编辑</a>{% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

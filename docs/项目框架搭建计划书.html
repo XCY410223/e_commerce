@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>e_commerce 电商项目 · 框架搭建计划书</title>
+<style>
+  :root{
+    --ink:#1a2233; --sub:#5b6b82; --line:#e2e8f0; --bg:#ffffff;
+    --accent:#1d4ed8; --accent-soft:#eef3ff; --warn:#b45309; --warn-soft:#fff7ed;
+    --code-bg:#0f172a; --code-fg:#dbeafe;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:#eef1f6; color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    font-size:14.5px; line-height:1.85;
+  }
+  .page{
+    max-width:940px; margin:32px auto; background:var(--bg);
+    padding:64px 72px 80px; box-shadow:0 10px 40px rgba(16,32,64,.10);
+    border-radius:4px;
+  }
+  h1{
+    font-size:26px; line-height:1.4; margin:0 0 28px; letter-spacing:.5px;
+    padding-bottom:18px; border-bottom:3px solid var(--accent);
+  }
+  h2{
+    font-size:19px; margin:44px 0 16px; padding-left:12px;
+    border-left:4px solid var(--accent); letter-spacing:.3px;
+  }
+  h3{font-size:16px; margin:28px 0 12px; color:var(--accent)}
+  h4{font-size:14.5px; margin:20px 0 10px}
+  p{margin:12px 0}
+  a{color:var(--accent)}
+  hr{border:none;border-top:1px solid var(--line);margin:36px 0}
+  table{
+    width:100%; border-collapse:collapse; margin:16px 0 22px; font-size:13px;
+    border:1px solid var(--line); page-break-inside:avoid;
+  }
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--accent-soft); font-weight:600; color:#17356b; white-space:nowrap}
+  tbody tr:nth-child(even){background:#fafbfd}
+  code{
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;
+    font-size:12.5px; background:#f1f4f9; color:#b91c1c;
+    padding:1.5px 5px; border-radius:3px;
+  }
+  pre.code{
+    background:var(--code-bg); color:var(--code-fg); padding:16px 18px;
+    border-radius:6px; overflow-x:auto; margin:16px 0 22px;
+    font-size:12.5px; line-height:1.65; page-break-inside:avoid;
+  }
+  pre.code code{background:none;color:inherit;padding:0;font-size:inherit}
+  blockquote{
+    margin:16px 0; padding:12px 16px; background:var(--warn-soft);
+    border-left:4px solid #f59e0b; color:#7c4a03; border-radius:0 4px 4px 0;
+    font-size:13.5px;
+  }
+  blockquote p{margin:0}
+  ul,ol{margin:12px 0; padding-left:26px}
+  li{margin:6px 0}
+  .toc{
+    background:#f8fafc; border:1px solid var(--line); border-radius:6px;
+    padding:18px 24px; margin:0 0 8px; font-size:13.5px;
+  }
+  .toc b{display:block;margin-bottom:8px;color:var(--sub);letter-spacing:2px;font-size:12px}
+  .toc a{display:inline-block;margin:3px 18px 3px 0;color:#334155;text-decoration:none}
+  .toc a:hover{color:var(--accent);text-decoration:underline}
+  .toolbar{
+    position:fixed; right:28px; bottom:28px; z-index:9;
+  }
+  .toolbar button{
+    background:var(--accent); color:#fff; border:none; border-radius:999px;
+    padding:11px 20px; font-size:13.5px; cursor:pointer;
+    box-shadow:0 6px 18px rgba(29,78,216,.35); font-family:inherit;
+  }
+  .toolbar button:hover{background:#1e40af}
+  @media print{
+    body{background:#fff}
+    .page{box-shadow:none;margin:0;padding:0;max-width:none}
+    .toolbar{display:none}
+    h2{page-break-after:avoid}
+    table,pre.code{page-break-inside:avoid}
+    @page{size:A4;margin:18mm 16mm}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+<h1>e_commerce 电商项目 · 框架搭建计划书</h1>
+<table><thead><tr><th>项目名称</th><th>e_commerce（天天生鲜 B2C 电商平台）</th></tr></thead><tbody><tr><td>项目根目录</td><td><code>&lt;项目目录&gt;</code></td></tr><tr><td>技术栈</td><td>Django 6.1.2 + Python 3.13.9 + MySQL + Redis + Celery + FastDFS</td></tr><tr><td>文档版本</td><td>v1.0</td></tr><tr><td>编制日期</td><td>2026-10-27</td></tr><tr><td>当前状态</td><td>骨架已建、<strong>无法启动</strong>（阻断性缺陷 6 项）</td></tr></tbody></table>
+<hr/>
+<h2>一、项目概述</h2>
+<h3>1.1 项目定位</h3>
+<p>面向生鲜品类的 B2C 电商平台，采用 Django 全栈（服务端渲染模板）方案，覆盖 <strong>用户、商品、购物车、订单、后台管理</strong> 五大业务域，并配套 Redis 缓存/会话、Celery 异步任务、FastDFS 分布式文件存储四项基础设施。</p>
+<h3>1.2 技术栈基线（已实测）</h3>
+<table><thead><tr><th>类别</th><th>组件</th><th>当前实际版本</th><th>状态</th></tr></thead><tbody><tr><td>语言</td><td>Python</td><td>3.13.9（<code>.venv</code>）</td><td>✅ 可用</td></tr><tr><td>框架</td><td>Django</td><td>6.1.2</td><td>✅ 可用</td></tr><tr><td>数据库</td><td>MySQL</td><td>未接入（当前配置 sqlite3）</td><td>❌ 待接</td></tr><tr><td>驱动</td><td>PyMySQL</td><td><strong>未安装</strong></td><td>❌ 阻断</td></tr><tr><td>缓存/会话</td><td>Redis + django-redis</td><td><strong>未安装</strong></td><td>❌ 待装</td></tr><tr><td>异步</td><td>Celery</td><td><strong>未安装</strong></td><td>❌ 待装</td></tr><tr><td>文件存储</td><td>FastDFS</td><td><strong>未安装</strong></td><td>❌ 待装</td></tr><tr><td>富文本</td><td>django-tinymce</td><td><strong>未安装</strong>（路由已引用）</td><td>❌ 阻断</td></tr><tr><td>图像处理</td><td>Pillow</td><td><strong>未安装</strong></td><td>❌ 待装</td></tr></tbody></table>
+<blockquote>实测命令：<code>python manage.py check</code> 当前直接抛出 <code>ModuleNotFoundError: No module named &#x27;pymysql&#x27;</code>，项目<strong>无法完成任何启动流程</strong>。</blockquote>
+<h3>1.3 建设目标</h3>
+<ol><li><code>manage.py check</code> / <code>migrate</code> / <code>runserver</code> 三件套全部通过，形成<strong>可运行的最小骨架</strong>。</li><li>11 张业务表按设计文档落成 Model 并完成首次迁移，<code>BigAutoField</code> 主键 + 统一审计字段。</li><li>五大模块路由、视图、模板目录就位，前后台可联通。</li><li>Redis 承载会话、首页缓存、购物车、浏览历史四类数据。</li><li>Celery 接管邮件发送与页面静态化两类异步任务。</li><li>交付一份可复现的依赖清单与启动说明。</li></ol>
+<hr/>
+<h2>二、现状诊断</h2>
+<h3>2.1 目录盘点</h3>
+<pre class="code" data-lang=""><code>e_commerce/
+├── .venv/                  # 虚拟环境（路径异常，见 2.2-⑥）
+├── .idea/                  # PyCharm 配置
+├── apps/
+│   ├── cart/  __init__.py  urls.py        # 缺 models/views/admin/apps
+│   ├── goods/ __init__.py  urls.py        # 缺 models/views/admin/apps
+│   ├── order/ __init__.py  urls.py  models.py（空文件）
+│   └── user/  __init__.py  urls.py        # 缺 models/views/admin/apps
+├── config/    __init__.py(pymysql) settings.py  urls.py  asgi.py  wsgi.py
+├── db/        __init__.py  base_model.py  # 仅抽象基类，无 app 配置
+├── static/    __init__.py                 # 空目录
+├── templates/ __init__.py                 # 空目录
+├── db.sqlite3                             # 0 字节残留
+└── manage.py</code></pre>
+<p><strong>结论</strong>：目录骨架与参考截图一致（<code>apps/{user,goods,cart,order}</code> + 配置包 + <code>db/base_model.py</code> + <code>static/templates</code>），但<strong>只有壳、没有肉</strong>：视图层、模型层、管理后台、迁移目录、模板全部缺失；配置文件存在复制粘贴导致的语法与逻辑错误。</p>
+<h3>2.2 阻断性缺陷（P0，必须先修）</h3>
+<table><thead><tr><th>#</th><th>位置</th><th>问题</th><th>后果</th></tr></thead><tbody><tr><td>①</td><td><code>config/__init__.py:1</code></td><td><code>import pymysql</code> 但依赖未安装</td><td>任何 <code>manage.py</code> 命令<strong>立即崩溃</strong>（已复现）</td></tr><tr><td>②</td><td><code>config/settings.py:65</code></td><td><code>os.path.join(BASE_DIR, templates)</code> 中 <code>templates</code> <strong>未加引号</strong></td><td>加载 settings 时 <code>NameError: name &#x27;templates&#x27; is not defined</code></td></tr><tr><td>③</td><td><code>config/settings.py:126</code></td><td><code>STaTICFILES_DIRS</code> 大小写拼错（应为 <code>STATICFILES_DIRS</code>）</td><td>Django 静默忽略，静态资源 404，且 <code>collectstatic</code> 失效</td></tr><tr><td>④</td><td><code>config/urls.py:19,22-27</code></td><td>只 <code>from django.urls import path</code>，却调用 <code>url()</code>、<code>include()</code></td><td><code>url</code> 在 Django 5.0 已移除 → <code>NameError</code>；<code>include</code> 未导入 → <code>NameError</code></td></tr><tr><td>⑤</td><td><code>config/urls.py:23</code></td><td>引用 <code>tinymce.urls</code> 但包未安装；且路径拼写 <code>tinmce</code></td><td><code>ModuleNotFoundError</code>，全站路由无法加载</td></tr><tr><td>⑥</td><td><code>apps/user/urls.py</code></td><td>内容是根路由的<strong>整段复制</strong>，含 <code>include(&quot;user.urls&quot;)</code> 自身</td><td>自引用递归 include，路由解析失败 / 命名空间冲突</td></tr></tbody></table>
+<p>另：早期 <code>.venv/pyvenv.cfg</code> 曾记录其他位置的虚拟环境路径，而项目已迁移到新目录 —— 该虚拟环境是<strong>整体搬迁</strong>而来，<code>Scripts/activate</code> 内的 <code>VIRTUAL_ENV</code> 仍指向旧路径，激活后 <code>pip</code> 可能写入旧目录。<strong>建议重建虚拟环境</strong>（见 7.1）。</p>
+<h3>2.3 结构性缺口（P1）</h3>
+<table><thead><tr><th>类别</th><th>缺失项</th><th>影响</th></tr></thead><tbody><tr><td>应用配置</td><td>四个 app 均无 <code>apps.py</code> / <code>AppConfig</code></td><td>无法设置 <code>verbose_name</code>，后台显示英文名</td></tr><tr><td>模型层</td><td><code>user/models.py</code>、<code>goods/models.py</code> 缺失；<code>order/models.py</code> 为空</td><td>11 张表无处落地</td></tr><tr><td>视图层</td><td>四个 app 均无 <code>views.py</code></td><td>路由无处理函数</td></tr><tr><td>后台</td><td>四个 app 均无 <code>admin.py</code></td><td>后台管理模块无从谈起</td></tr><tr><td>迁移</td><td>无 <code>migrations/</code> 目录</td><td>无法建表</td></tr><tr><td>模板</td><td><code>templates/</code> 仅一个空 <code>__init__.py</code></td><td>无页面可渲染</td></tr><tr><td>静态资源</td><td><code>static/</code> 仅一个空 <code>__init__.py</code></td><td>无 css/js/img</td></tr><tr><td>配置</td><td>无 <code>CACHES</code> / <code>SESSION_ENGINE</code> / <code>MEDIA_*</code> / <code>CELERY_*</code> / <code>AUTH_USER_MODEL</code> / <code>DEFAULT_AUTO_FIELD</code></td><td>基础设施全部悬空</td></tr><tr><td>工程化</td><td>无 <code>requirements.txt</code>、无 <code>.env</code>、<code>DEBUG</code>/<code>SECRET_KEY</code> 硬编码</td><td>不可复现、不可协作</td></tr></tbody></table>
+<h3>2.4 一个必须现在决策的时序问题</h3>
+<p><code>django.contrib.auth</code> 的默认用户表一旦 <code>migrate</code> 落库，<strong>再切换到自定义 User 模型将极其痛苦</strong>（需手工改表 + 迁移历史造假）。当前 <code>db.sqlite3</code> 为 0 字节、尚未迁移，是设置 <code>AUTH_USER_MODEL = &quot;user.User&quot;</code> 的<strong>唯一低成本窗口</strong>。</p>
+<blockquote><strong>决策：本次搭建第一步就定义 <code>user.User(AbstractUser)</code> 并设置 <code>AUTH_USER_MODEL</code>，之后才执行首次 <code>migrate</code>。</strong></blockquote>
+<hr/>
+<h2>三、目标架构</h2>
+<h3>3.1 分层视图</h3>
+<pre class="code" data-lang=""><code>┌─────────────────────────────── 前端（服务端渲染模板 + 少量 AJAX）───────────────────────────────┐
+│   用户相关        商品相关        购物车相关        订单相关        后台管理                    │
+└───────────────────────────────────────┬──────────────────────────────────────────────────────┘
+                                        │ HTTP / 模板上下文
+┌───────────────────────────────────────▼──────────────────────────────────────────────────────┐
+│  后端（Django apps）                                                                          │
+│  user  ── 注册/登录/激活/地址      goods ── 首页/列表/详情/搜索                               │
+│  cart  ── Redis 购物车             order ── 下单/支付/订单列表                                │
+│  横切：db/base_model.py（审计字段）  utils/（存储、通用函数）  celery_tasks/（异步）           │
+└───────┬──────────────┬──────────────────┬──────────────────────────┬────────────────────────┘
+        │              │                  │                          │
+   ┌────▼────┐   ┌─────▼──────┐     ┌─────▼──────┐            ┌──────▼──────────┐
+   │  MySQL  │   │   Redis    │     │   Celery   │            │     FastDFS     │
+   │ 持久化  │   │ session/缓存│     │ 异步任务队列│            │  分布式文件存储 │
+   │ 11 张表 │   │ 购物车/足迹 │     │ 邮件/静态化 │            │  商品图/头像    │
+   └─────────┘   └────────────┘     └────────────┘            └─────────────────┘</code></pre>
+<h3>3.2 模块职责矩阵</h3>
+<table><thead><tr><th>模块</th><th>App</th><th>核心职责</th><th>数据源</th><th>关键页面/接口</th></tr></thead><tbody><tr><td>用户</td><td><code>user</code></td><td>注册、登录、激活、退出、收货地址 CRUD</td><td>MySQL + Redis(session)</td><td><code>/user/register</code> <code>/user/login</code> <code>/user/address</code></td></tr><tr><td>商品</td><td><code>goods</code></td><td>首页、分类列表、详情、搜索、首页静态化</td><td>MySQL + Redis(cache)</td><td><code>/</code> <code>/list/{type}</code> <code>/detail/{sku}</code> <code>/search</code></td></tr><tr><td>购物车</td><td><code>cart</code></td><td>加/删/改/查、数量统计</td><td>Redis(Hash) + Cookie</td><td><code>/cart/add</code> <code>/cart/</code> <code>/cart/update</code></td></tr><tr><td>订单</td><td><code>order</code></td><td>确认页、提交订单、支付、订单列表</td><td>MySQL(事务)</td><td><code>/order/place</code> <code>/order/commit</code> <code>/order/{id}</code></td></tr><tr><td>后台</td><td><code>admin</code></td><td>商品/类型/轮播/促销/订单/用户维护、富文本编辑</td><td>MySQL + FastDFS</td><td><code>/admin/</code></td></tr></tbody></table>
+<h3>3.3 典型请求链路（商品详情）</h3>
+<pre class="code" data-lang=""><code>浏览器 GET /detail/3
+  → goods.views.DetailView
+      ├─ cache.get(&quot;goods_detail_3&quot;)  ──命中──→ 直接渲染模板
+      └─ 未命中 → MySQL 查 GoodsSKU + GoodsImage + GoodsSPU
+                 → Redis 追加浏览历史 history_{user_id}
+                 → cache.set(..., 3600) → 渲染模板</code></pre>
+<hr/>
+<h2>四、目录结构规范</h2>
+<p>搭建完成后的目标目录（<code>★</code> 为本次需新建）：</p>
+<pre class="code" data-lang=""><code>e_commerce/
+├── manage.py
+├── requirements.txt                    ★
+├── .env.example                        ★  数据库/Redis 连接参数模板
+├── .gitignore                          ★
+├── apps/
+│   ├── __init__.py
+│   ├── user/
+│   │   ├── __init__.py
+│   │   ├── apps.py                     ★  verbose_name=&quot;用户模块&quot;
+│   │   ├── models.py                   ★  User / Address
+│   │   ├── views.py                    ★  注册/登录/激活/地址
+│   │   ├── urls.py                     ★  app_name=&quot;user&quot;
+│   │   ├── admin.py                    ★
+│   │   ├── tests.py                    ★
+│   │   └── migrations/__init__.py      ★
+│   ├── goods/
+│   │   ├── apps.py  models.py  views.py  urls.py  admin.py  tests.py
+│   │   ├── migrations/__init__.py
+│   │   └── search_indexes.py           ★  可选：Haystack 索引
+│   ├── cart/
+│   │   ├── apps.py  views.py  urls.py  tests.py
+│   │   └── （无 models.py —— 数据落在 Redis）
+│   └── order/
+│       ├── apps.py  models.py  views.py  urls.py  admin.py  tests.py
+│       └── migrations/__init__.py
+├── config/
+│   ├── __init__.py                     修正：pymysql 注册
+│   ├── settings.py                     修正：DB/缓存/会话/Celery/存储
+│   ├── urls.py                         修正：path + include
+│   ├── celery.py                       ★  Celery app 入口
+│   ├── asgi.py  wsgi.py
+├── db/
+│   ├── __init__.py
+│   └── base_model.py                   已具备 BaseModel（保留）
+├── celery_tasks/
+│   ├── __init__.py
+│   ├── tasks.py                        ★  发送邮件、生成静态页
+│   └── templates/                      ★  静态化用模板
+├── utils/
+│   ├── __init__.py
+│   ├── storage.py                      ★  FastDFS 存储后端（可降级本地）
+│   └── mixins.py                       ★  登录校验、分页等公共逻辑
+├── static/
+│   ├── css/  js/  images/              ★  按页面拆分
+│   └── favicon.ico
+├── templates/
+│   ├── base.html                       ★  母版
+│   ├── index.html  list.html  detail.html
+│   ├── user/  cart/  order/            ★
+│   └── search/
+├── media/                              ★  MEDIA_ROOT（开发期）
+└── docs/
+    └── 项目框架搭建计划书.md</code></pre>
+<blockquote><strong>关于 <code>apps</code> 包名</strong>：现 <code>settings.py:15</code> 已 <code>sys.path.insert(0, BASE_DIR/&quot;apps&quot;)</code>，因此 <code>INSTALLED_APPS</code> 写 <code>&quot;user&quot;</code> 而非 <code>&quot;apps.user&quot;</code>。保持现状可运行，但需保证每个 <code>apps.py</code> 里 <code>name = &quot;user&quot;</code>。若后续改用 <code>&quot;apps.user&quot;</code> 形式，需同步改 <code>AppConfig.name</code> 与所有 <code>include()</code> 字符串，<strong>二选一，不可混用</strong>。</blockquote>
+<hr/>
+<h2>五、数据模型设计</h2>
+<h3>5.1 表 → Model 映射总览</h3>
+<table><thead><tr><th>#</th><th>设计文档表名</th><th>Django Model</th><th>App</th><th>关键关系</th></tr></thead><tbody><tr><td>1</td><td>用户表</td><td><code>User(AbstractUser)</code></td><td>user</td><td><code>AUTH_USER_MODEL</code></td></tr><tr><td>2</td><td>地址表</td><td><code>Address</code></td><td>user</td><td><code>FK → User</code></td></tr><tr><td>3</td><td>商品种类表</td><td><code>GoodsType</code></td><td>goods</td><td>—</td></tr><tr><td>4</td><td>商品SPU表</td><td><code>GoodsSPU</code></td><td>goods</td><td>—</td></tr><tr><td>5</td><td>商品SKU表</td><td><code>GoodsSKU</code></td><td>goods</td><td><code>FK → GoodsType</code>、<code>FK → GoodsSPU</code></td></tr><tr><td>6</td><td>商品图片表</td><td><code>GoodsImage</code></td><td>goods</td><td><code>FK → GoodsSKU</code></td></tr><tr><td>7</td><td>首页轮播商品表</td><td><code>IndexGoodsBanner</code></td><td>goods</td><td><code>FK → GoodsSKU</code></td></tr><tr><td>8</td><td>首页促销活动表</td><td><code>IndexPromotionBanner</code></td><td>goods</td><td>—</td></tr><tr><td>9</td><td>首页分类商品展示表</td><td><code>IndexTypeGoodsBanner</code></td><td>goods</td><td><code>FK → GoodsType</code>、<code>FK → GoodsSKU</code></td></tr><tr><td>10</td><td>订单信息表</td><td><code>OrderInfo</code></td><td>order</td><td><code>FK → User</code>、<code>FK → Address</code></td></tr><tr><td>11</td><td>订单商品表</td><td><code>OrderGoods</code></td><td>order</td><td><code>FK → OrderInfo</code>、<code>FK → GoodsSKU</code></td></tr></tbody></table>
+<h3>5.2 关键字段定义</h3>
+<p><strong>用户表</strong>（复用 auth 体系，<code>激活标识/权限标识</code> 由 <code>is_active</code>/<code>is_superuser</code>/<code>is_staff</code> 承载）</p>
+<pre class="code" data-lang="python"><code># apps/user/models.py
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from db.base_model import BaseModel
+
+class User(AbstractUser, BaseModel):
+    &quot;&quot;&quot;用户模型：继承 AbstractUser 保留权限体系，叠加统一审计字段&quot;&quot;&quot;
+    class Meta:
+        db_table = &quot;df_user&quot;
+        verbose_name = &quot;用户&quot;
+        verbose_name_plural = verbose_name
+
+class Address(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=&quot;所属用户&quot;, related_name=&quot;addresses&quot;)
+    receiver = models.CharField(max_length=20, verbose_name=&quot;收件人&quot;)
+    addr = models.CharField(max_length=256, verbose_name=&quot;详细地址&quot;)
+    zip_code = models.CharField(max_length=6, verbose_name=&quot;邮编&quot;)
+    phone = models.CharField(max_length=11, verbose_name=&quot;联系电话&quot;)
+    is_default = models.BooleanField(default=False, verbose_name=&quot;默认地址&quot;)
+
+    class Meta:
+        db_table = &quot;df_address&quot;
+        verbose_name = &quot;收货地址&quot;</code></pre>
+<p><strong>商品表族</strong>（含&quot;以空间换时间&quot;的冗余字段）</p>
+<pre class="code" data-lang="python"><code># apps/goods/models.py
+class GoodsType(BaseModel):
+    name = models.CharField(max_length=20, verbose_name=&quot;种类名称&quot;)
+    logo = models.CharField(max_length=100, verbose_name=&quot;标识&quot;)
+    image = models.ImageField(upload_to=&quot;type&quot;, verbose_name=&quot;种类图片&quot;)
+    class Meta:
+        db_table = &quot;df_goods_type&quot;
+
+class GoodsSPU(BaseModel):
+    name = models.CharField(max_length=20, verbose_name=&quot;SPU名称&quot;)
+    detail = models.TextField(verbose_name=&quot;商品详情&quot;)   # 富文本，TemplateHTMLField
+    class Meta:
+        db_table = &quot;df_goods_spu&quot;
+
+class GoodsSKU(BaseModel):
+    STATUS_CHOICES = ((0, &quot;下线&quot;), (1, &quot;上线&quot;))
+    type = models.ForeignKey(GoodsType, on_delete=models.CASCADE, verbose_name=&quot;商品种类&quot;)
+    spu = models.ForeignKey(GoodsSPU, on_delete=models.CASCADE, verbose_name=&quot;商品SPU&quot;)
+    name = models.CharField(max_length=100, verbose_name=&quot;商品名称&quot;)
+    desc = models.CharField(max_length=256, verbose_name=&quot;商品简介&quot;)
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=&quot;单价&quot;)
+    unite = models.CharField(max_length=20, verbose_name=&quot;计量单位&quot;)
+    stock = models.IntegerField(default=0, verbose_name=&quot;库存&quot;)
+    sales = models.IntegerField(default=0, verbose_name=&quot;销量&quot;)        # 冗余，避免实时 sum
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=1, verbose_name=&quot;状态&quot;)
+
+    class Meta:
+        db_table = &quot;df_goods_sku&quot;
+        indexes = [
+            models.Index(fields=[&quot;type&quot;, &quot;status&quot;], name=&quot;idx_sku_type_status&quot;),
+            models.Index(fields=[&quot;spu&quot;], name=&quot;idx_sku_spu&quot;),
+        ]
+
+class GoodsImage(BaseModel):
+    sku = models.ForeignKey(GoodsSKU, on_delete=models.CASCADE, related_name=&quot;images&quot;)
+    image = models.ImageField(upload_to=&quot;goods&quot;, verbose_name=&quot;图片&quot;)
+    is_main = models.BooleanField(default=False, verbose_name=&quot;主图&quot;)</code></pre>
+<p><strong>订单表</strong>（<code>总数目/总金额</code> 为下单时快照，避免后续关联计算）</p>
+<pre class="code" data-lang="python"><code># apps/order/models.py
+class OrderInfo(BaseModel):
+    PAY_CHOICES = ((1, &quot;支付宝&quot;), (2, &quot;微信&quot;), (3, &quot;银联&quot;))
+    order_id = models.CharField(max_length=64, unique=True, verbose_name=&quot;订单号&quot;)   # 时间戳+用户ID
+    user = models.ForeignKey(&quot;user.User&quot;, on_delete=models.PROTECT, verbose_name=&quot;下单用户&quot;)
+    addr = models.ForeignKey(&quot;user.Address&quot;, on_delete=models.PROTECT, verbose_name=&quot;收货地址&quot;)
+    pay_method = models.SmallIntegerField(choices=PAY_CHOICES, default=1, verbose_name=&quot;支付方式&quot;)
+    total_count = models.IntegerField(default=1, verbose_name=&quot;商品总件数&quot;)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=&quot;商品总金额&quot;)
+    transit_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=&quot;运费&quot;)
+    pay_status = models.SmallIntegerField(default=0, verbose_name=&quot;支付状态&quot;)   # 0未支付 1已支付
+    trade_no = models.CharField(max_length=100, null=True, blank=True, verbose_name=&quot;支付流水号&quot;)
+
+    class Meta:
+        db_table = &quot;df_order_info&quot;
+        indexes = [models.Index(fields=[&quot;user&quot;, &quot;-create_time&quot;], name=&quot;idx_order_user_time&quot;)]
+
+class OrderGoods(BaseModel):
+    order = models.ForeignKey(OrderInfo, on_delete=models.CASCADE, related_name=&quot;skus&quot;)
+    sku = models.ForeignKey(&quot;goods.GoodsSKU&quot;, on_delete=models.PROTECT)
+    count = models.IntegerField(default=1, verbose_name=&quot;数量&quot;)
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=&quot;成交单价&quot;)  # 价格快照
+    comment = models.CharField(max_length=256, null=True, blank=True, verbose_name=&quot;评论&quot;)</code></pre>
+<h3>5.3 索引与冗余策略</h3>
+<table><thead><tr><th>策略</th><th>落点</th><th>理由</th></tr></thead><tbody><tr><td>冗余销量</td><td><code>GoodsSKU.sales</code></td><td>列表页排序/展示，避免每次 <code>COUNT</code> 订单明细</td></tr><tr><td>冗余总价</td><td><code>OrderInfo.total_count / total_amount</code></td><td>订单列表与支付只需读单表</td></tr><tr><td>价格快照</td><td><code>OrderGoods.price</code></td><td>商品调价不影响历史订单</td></tr><tr><td>覆盖索引</td><td><code>(type, status)</code></td><td>分类列表页 <code>WHERE type=? AND status=1</code></td></tr><tr><td>联合索引</td><td><code>(user, -create_time)</code></td><td>用户订单列表分页</td></tr><tr><td>唯一约束</td><td><code>OrderInfo.order_id</code></td><td>幂等下单、防重复支付</td></tr></tbody></table>
+<blockquote>设计文档标注的&quot;以空间换时间&quot;即上述<strong>冗余字段 + 覆盖索引</strong>两组手段，属有意为之，不做范式化。</blockquote>
+<h3>5.4 Redis 键设计</h3>
+<table><thead><tr><th>用途</th><th>Key</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td>会话</td><td><code>session:&lt;session_key&gt;</code></td><td>String</td><td><code>SESSION_ENGINE = django.contrib.sessions.backends.cache</code></td></tr><tr><td>首页缓存</td><td><code>index_content</code></td><td>String</td><td>序列化后的上下文，TTL 3600s</td></tr><tr><td>商品详情</td><td><code>goods_detail:&lt;sku_id&gt;</code></td><td>String</td><td>TTL 3600s</td></tr><tr><td>购物车（登录）</td><td><code>cart:&lt;user_id&gt;</code></td><td>Hash</td><td>field=<code>sku_id</code>，value=<code>count</code></td></tr><tr><td>购物车（游客）</td><td>Cookie <code>cart</code></td><td>JSON</td><td><code>{sku_id: count}</code>，登录后合并入 Redis</td></tr><tr><td>浏览历史</td><td><code>history:&lt;user_id&gt;</code></td><td>List</td><td><code>LPUSH</code> + <code>LTRIM 0 4</code>，保留最近 5 条</td></tr></tbody></table>
+<hr/>
+<h2>六、关键技术方案</h2>
+<h3>6.1 MySQL 接入</h3>
+<pre class="code" data-lang="python"><code># config/__init__.py
+import pymysql
+pymysql.version_info = (2, 2, 1, &quot;final&quot;, 0)   # 绕过 mysqlclient 版本校验
+pymysql.install_as_MySQLdb()</code></pre>
+<pre class="code" data-lang="python"><code># config/settings.py
+DATABASES = {
+    &quot;default&quot;: {
+        &quot;ENGINE&quot;: &quot;django.db.backends.mysql&quot;,
+        &quot;NAME&quot;: os.getenv(&quot;DB_NAME&quot;, &quot;e_commerce&quot;),
+        &quot;USER&quot;: os.getenv(&quot;DB_USER&quot;, &quot;root&quot;),
+        &quot;PASSWORD&quot;: os.getenv(&quot;DB_PASSWORD&quot;, &quot;&quot;),
+        &quot;HOST&quot;: os.getenv(&quot;DB_HOST&quot;, &quot;127.0.0.1&quot;),
+        &quot;PORT&quot;: os.getenv(&quot;DB_PORT&quot;, &quot;3306&quot;),
+        &quot;OPTIONS&quot;: {&quot;charset&quot;: &quot;utf8mb4&quot;, &quot;init_command&quot;: &quot;SET sql_mode=&#x27;STRICT_TRANS_TABLES&#x27;&quot;},
+    }
+}</code></pre>
+<blockquote>建库语句：<code>CREATE DATABASE e_commerce DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;</code></blockquote>
+<h3>6.2 Redis：会话 / 缓存 / 购物车 / 足迹</h3>
+<pre class="code" data-lang="python"><code>CACHES = {
+    &quot;default&quot;: {
+        &quot;BACKEND&quot;: &quot;django_redis.cache.RedisCache&quot;,
+        &quot;LOCATION&quot;: &quot;redis://127.0.0.1:6379/0&quot;,
+        &quot;OPTIONS&quot;: {&quot;CLIENT_CLASS&quot;: &quot;django_redis.client.DefaultClient&quot;},
+    }
+}
+SESSION_ENGINE = &quot;django.contrib.sessions.backends.cache&quot;
+SESSION_CACHE_ALIAS = &quot;default&quot;</code></pre>
+<p>购物车读写统一走 <code>django_redis.get_redis_connection(&quot;default&quot;)</code>，避免缓存键前缀污染业务 Hash。</p>
+<h3>6.3 Celery 异步任务</h3>
+<table><thead><tr><th>任务</th><th>触发点</th><th>说明</th></tr></thead><tbody><tr><td><code>send_active_mail</code></td><td>注册成功</td><td>发激活链接，避免阻塞响应</td></tr><tr><td><code>generate_static_index</code></td><td>后台改动轮播/促销</td><td>渲染 <code>index.html</code> 到 <code>static/</code></td></tr><tr><td><code>generate_static_detail</code></td><td>商品上下架/改价</td><td>逐 SKU 生成详情静态页</td></tr></tbody></table>
+<pre class="code" data-lang="python"><code># config/celery.py
+import os
+from celery import Celery
+os.environ.setdefault(&quot;DJANGO_SETTINGS_MODULE&quot;, &quot;config.settings&quot;)
+app = Celery(&quot;e_commerce&quot;)
+app.config_from_object(&quot;django.conf:settings&quot;, namespace=&quot;CELERY&quot;)
+app.autodiscover_tasks()</code></pre>
+<blockquote><strong>Windows 注意</strong>：Celery 默认 prefork 池不兼容，启动须加 <code>--pool=solo</code>： <code>celery -A config.celery worker -l info --pool=solo</code></blockquote>
+<h3>6.4 文件存储：FastDFS 抽象层</h3>
+<p><code>fdfs_client-py</code> 长期未维护，在 Python 3.13 上<strong>不可用</strong>。方案是自建 Storage 后端，走 FastDFS 的 HTTP 上传接口，并把&quot;本地存储&quot;作为降级实现：</p>
+<pre class="code" data-lang=""><code>utils/storage.py
+  ├── class FastDFSStorage(Storage)   # 生产：POST 到 tracker/nginx
+  └── class LocalMediaStorage(Storage)# 开发：落到 MEDIA_ROOT</code></pre>
+<pre class="code" data-lang="python"><code># settings.py
+DEFAULT_FILE_STORAGE 已废弃，改用：
+STORAGES = {
+    &quot;default&quot;: {&quot;BACKEND&quot;: os.getenv(&quot;STORAGE_BACKEND&quot;, &quot;utils.storage.LocalMediaStorage&quot;)},
+    &quot;staticfiles&quot;: {&quot;BACKEND&quot;: &quot;django.contrib.staticfiles.storage.StaticFilesStorage&quot;},
+}</code></pre>
+<blockquote>开发期不阻塞：<code>STORAGE_BACKEND</code> 默认走本地，等商品图入库阶段再切 FastDFS，避免因分布式存储未就绪卡住整条链路。</blockquote>
+<h3>6.5 后台与富文本</h3>
+<pre class="code" data-lang="python"><code>INSTALLED_APPS += [&quot;tinymce&quot;]
+TINYMCE_DEFAULT_CONFIG = {&quot;theme&quot;: &quot;silver&quot;, &quot;height&quot;: 500, &quot;menubar&quot;: False}</code></pre>
+<p><code>config/urls.py</code> 中修正拼写并加条件开关：</p>
+<pre class="code" data-lang="python"><code>path(&quot;tinymce/&quot;, include(&quot;tinymce.urls&quot;)),</code></pre>
+<h3>6.6 用户模型时序（最高优先级）</h3>
+<pre class="code" data-lang=""><code>① 写 apps/user/models.py: class User(AbstractUser, BaseModel)
+② settings.py: AUTH_USER_MODEL = &quot;user.User&quot;
+③ 删除 db.sqlite3（0 字节残留）
+④ 首次 makemigrations user → migrate</code></pre>
+<p><strong>顺序不可颠倒</strong>。若先 <code>migrate</code> 建了 <code>auth_user</code>，再切自定义模型，将触发 <code>InconsistentMigrationHistory</code>，只能清库重来。</p>
+<hr/>
+<h2>七、实施计划</h2>
+<h3>7.1 阶段划分</h3>
+<table><thead><tr><th>阶段</th><th>内容</th><th>主要产出</th><th>验收标准</th><th>参考工期</th></tr></thead><tbody><tr><td><strong>P0 环境复位</strong></td><td>重建虚拟环境、装依赖、建库</td><td><code>requirements.txt</code>、可用的 <code>.venv</code></td><td><code>pip list</code> 含 Django/PyMySQL/redis/celery/Pillow/tinymce；<code>python -c &quot;import pymysql&quot;</code> 通过</td><td>0.5d</td></tr><tr><td><strong>P1 骨架修复</strong></td><td>修 settings/urls 六处 P0 缺陷，补 <code>apps.py</code></td><td><code>manage.py check</code> 输出 <code>System check identified no issues</code></td><td>无报错、无 warning</td><td>0.5d</td></tr><tr><td><strong>P2 数据层</strong></td><td>11 个 Model + <code>AUTH_USER_MODEL</code> + 首次迁移</td><td><code>migrations/0001_initial.py</code></td><td><code>migrate</code> 成功，MySQL 中出现 11 张 <code>df_*</code> 表</td><td>1.5d</td></tr><tr><td><strong>P3 用户模块</strong></td><td>注册/登录/激活/退出/地址 CRUD</td><td><code>templates/user/*</code>、<code>user/views.py</code></td><td>注册收激活邮件→点击激活→登录→增删改查地址全通</td><td>1.5d</td></tr><tr><td><strong>P4 商品模块</strong></td><td>首页、列表、详情、搜索、Redis 缓存</td><td><code>templates/{index,list,detail}.html</code></td><td>首页 5 个楼层数据来自 DB；详情页二次访问命中缓存</td><td>2d</td></tr><tr><td><strong>P5 购物车</strong></td><td>Redis Hash 增删改查、登录合并、数量角标</td><td><code>cart/views.py</code>、AJAX 接口</td><td>未登录加购→登录后合并；刷新数量不丢</td><td>1d</td></tr><tr><td><strong>P6 订单模块</strong></td><td>确认页、事务下单、扣库存、支付回调、订单列表</td><td><code>order/views.py</code></td><td>并发下单不超卖（<code>select_for_update</code>）；订单金额=明细合计+运费</td><td>2d</td></tr><tr><td><strong>P7 后台与静态化</strong></td><td>admin 注册全模型、富文本、Celery 生成静态首页</td><td><code>admin.py</code>、<code>celery_tasks/tasks.py</code></td><td>后台改轮播→首页静态页自动更新</td><td>1.5d</td></tr><tr><td><strong>P8 文件存储</strong></td><td>FastDFS Storage 后端 + 商品图上传</td><td><code>utils/storage.py</code></td><td>后台上传图片返回可访问 URL；切本地/远程仅改环境变量</td><td>1d</td></tr><tr><td><strong>P9 联调验收</strong></td><td>全链路回归、异常分支、文档</td><td>启动说明、测试记录</td><td>9 项验收清单全绿（见第八章）</td><td>1d</td></tr></tbody></table>
+<blockquote>合计约 <strong>12.5 人日</strong>。P2 是硬前置，P3/P4/P5 可在 P2 完成后并行，P6 依赖 P3+P5。</blockquote>
+<h3>7.2 关键路径</h3>
+<pre class="code" data-lang=""><code>P0 ──▶ P1 ──▶ P2 ──┬──▶ P3 ──┐
+                   ├──▶ P4 ──┼──▶ P6 ──▶ P7 ──▶ P9
+                   └──▶ P5 ──┘            P8 ──┘</code></pre>
+<hr/>
+<h2>八、验收标准</h2>
+<h3>8.1 命令级验收</h3>
+<pre class="code" data-lang="bash"><code># 1. 配置自检
+python manage.py check                    # → System check identified no issues (0 silenced)
+
+# 2. 迁移一致性
+python manage.py makemigrations --check --dry-run   # → No changes detected
+
+# 3. 建表
+python manage.py migrate                  # → 全部 OK
+
+# 4. 表结构核对（MySQL）
+mysql -uroot -p e_commerce -e &quot;SHOW TABLES LIKE &#x27;df_%&#x27;;&quot;   # → 11 张
+
+# 5. 启动
+python manage.py runserver 0.0.0.0:8000</code></pre>
+<h3>8.2 功能级验收清单</h3>
+<table><thead><tr><th>#</th><th>检查项</th><th>通过标准</th></tr></thead><tbody><tr><td>1</td><td>首页</td><td>轮播、促销、分类楼层数据均来自数据库，图片可显示</td></tr><tr><td>2</td><td>注册激活</td><td>收到激活邮件（console 后端可见），链接 24h 内有效</td></tr><tr><td>3</td><td>登录态</td><td>关闭浏览器重开仍登录（session 落 Redis）</td></tr><tr><td>4</td><td>商品详情</td><td>显示 SKU 价格/库存/详情富文本/多图；浏览历史写入 Redis</td></tr><tr><td>5</td><td>购物车</td><td>未登录加购存 Cookie，登录后自动合并；数量角标正确</td></tr><tr><td>6</td><td>下单</td><td>库存不足拦截；事务内扣减库存并累加销量</td></tr><tr><td>7</td><td>订单列表</td><td>分页正确，状态筛选可用</td></tr><tr><td>8</td><td>后台</td><td>五大模块可增删改查，富文本可插入图片</td></tr><tr><td>9</td><td>静态化</td><td>后台修改轮播后，Celery 任务执行，<code>static/index.html</code> 更新</td></tr></tbody></table>
+<h3>8.3 质量红线</h3>
+<ul><li>所有查询走 ORM 或参数化 SQL，<strong>禁止字符串拼接</strong>。</li><li>密钥、数据库口令从环境变量读取，<code>SECRET_KEY</code> 不入库。</li><li><code>DEBUG=False</code> 时 <code>ALLOWED_HOSTS</code> 必须显式配置。</li><li>涉及库存/金额的操作必须在 <code>transaction.atomic()</code> 内。</li></ul>
+<hr/>
+<h2>九、风险与对策</h2>
+<table><thead><tr><th>#</th><th>风险</th><th>概率</th><th>影响</th><th>对策</th></tr></thead><tbody><tr><td>1</td><td>先 <code>migrate</code> 后设 <code>AUTH_USER_MODEL</code></td><td>高</td><td>高（需清库）</td><td>列为 P2 第一步，写进启动检查清单</td></tr><tr><td>2</td><td><code>fdfs_client-py</code> 不支持 Python 3.13</td><td>高</td><td>中</td><td>自建 HTTP Storage 后端；开发期降级本地存储</td></tr><tr><td>3</td><td>Windows 无原生 Redis</td><td>高</td><td>高</td><td>Docker <code>redis:7-alpine</code> 或 WSL2 安装；文档固化启动命令</td></tr><tr><td>4</td><td>Celery 在 Windows 卡死</td><td>中</td><td>中</td><td><code>--pool=solo</code>；或改用 <code>django-q2</code></td></tr><tr><td>5</td><td>Django 6.1 移除 <code>url()</code>，旧教程代码直接抄会崩</td><td>高</td><td>中</td><td>全项目统一 <code>path()/re_path()</code>；<code>include</code> 显式导入</td></tr><tr><td>6</td><td><code>apps</code> 包名与 <code>INSTALLED_APPS</code> 写法不一致</td><td>中</td><td>中</td><td>统一用 <code>sys.path</code> 注入 + 裸 app 名，<code>AppConfig.name</code> 同步</td></tr><tr><td>7</td><td>虚拟环境路径漂移导致 pip 装错位置</td><td>中</td><td>中</td><td>删除 <code>.venv</code> 重建，不用搬迁的环境</td></tr><tr><td>8</td><td>订单并发超卖</td><td>中</td><td>高</td><td><code>select_for_update()</code> + 库存校验 + 唯一约束兜底</td></tr></tbody></table>
+<hr/>
+<h2>十、附录</h2>
+<h3>A. <code>requirements.txt</code></h3>
+<pre class="code" data-lang="txt"><code>Django==6.1.2
+PyMySQL&gt;=1.1.1
+redis&gt;=5.0
+django-redis&gt;=5.4
+celery&gt;=5.4
+Pillow&gt;=10.4
+django-tinymce&gt;=3.8
+python-dotenv&gt;=1.0
+requests&gt;=2.32</code></pre>
+<h3>B. 修复后的 <code>config/urls.py</code>（对照版）</h3>
+<pre class="code" data-lang="python"><code>from django.contrib import admin
+from django.urls import path, include, re_path
+
+urlpatterns = [
+    path(&quot;admin/&quot;, admin.site.urls),
+    path(&quot;tinymce/&quot;, include(&quot;tinymce.urls&quot;)),
+    path(&quot;user/&quot;, include(&quot;user.urls&quot;, namespace=&quot;user&quot;)),
+    path(&quot;cart/&quot;, include(&quot;cart.urls&quot;, namespace=&quot;cart&quot;)),
+    path(&quot;order/&quot;, include(&quot;order.urls&quot;, namespace=&quot;order&quot;)),
+    path(&quot;&quot;, include(&quot;goods.urls&quot;, namespace=&quot;goods&quot;)),   # 兜底路由必须最后
+]</code></pre>
+<blockquote>对照原文件：<code>url()</code> → <code>path()</code>（Django 5.0 起 <code>url</code> 已移除）；补 <code>include</code> 导入；<code>tinmce</code> → <code>tinymce</code>；空字符串路由 <code>r&quot;^&quot;</code> 会导致后续规则永不匹配，故置于末位。</blockquote>
+<h3>C. 各 <code>urls.py</code> 应补的 <code>app_name</code></h3>
+<pre class="code" data-lang="python"><code># apps/user/urls.py
+app_name = &quot;user&quot;          # 否则 include(..., namespace=&quot;user&quot;) 抛 ImproperlyConfigured
+urlpatterns = []</code></pre>
+<p><code>goods</code> / <code>cart</code> / <code>order</code> 同理，且<strong>必须删掉 <code>apps/user/urls.py</code> 中从根路由复制来的全部 <code>include</code> 语句</strong>。</p>
+<h3>D. <code>settings.py</code> 需新增/修正的配置项</h3>
+<table><thead><tr><th>配置项</th><th>建议值</th></tr></thead><tbody><tr><td><code>LANGUAGE_CODE</code></td><td><code>&quot;zh-hans&quot;</code></td></tr><tr><td><code>TIME_ZONE</code></td><td><code>&quot;Asia/Shanghai&quot;</code></td></tr><tr><td><code>USE_TZ</code></td><td><code>True</code></td></tr><tr><td><code>DEFAULT_AUTO_FIELD</code></td><td><code>&quot;django.db.models.BigAutoField&quot;</code></td></tr><tr><td><code>AUTH_USER_MODEL</code></td><td><code>&quot;user.User&quot;</code></td></tr><tr><td><code>MEDIA_URL</code> / <code>MEDIA_ROOT</code></td><td><code>&quot;/media/&quot;</code> / <code>BASE_DIR/&quot;media&quot;</code></td></tr><tr><td><code>STATICFILES_DIRS</code></td><td><code>[BASE_DIR / &quot;static&quot;]</code>（修正大小写）</td></tr><tr><td><code>TEMPLATES[0][&quot;DIRS&quot;]</code></td><td><code>[BASE_DIR / &quot;templates&quot;]</code>（补引号）</td></tr><tr><td><code>LOGIN_URL</code></td><td><code>&quot;/user/login/&quot;</code></td></tr></tbody></table>
+<h3>E. 环境自检脚本（建议落地为 <code>scripts/check_env.py</code>）</h3>
+<pre class="code" data-lang="python"><code>import sys, importlib
+mods = [&quot;django&quot;, &quot;pymysql&quot;, &quot;redis&quot;, &quot;celery&quot;, &quot;PIL&quot;, &quot;tinymce&quot;, &quot;dotenv&quot;]
+for m in mods:
+    try:
+        mod = importlib.import_module(m)
+        print(f&quot;[OK]   {m:12s} {getattr(mod, &#x27;__version__&#x27;, &#x27;&#x27;)}&quot;)
+    except ImportError:
+        print(f&quot;[MISS] {m}&quot;)
+print(&quot;python:&quot;, sys.version)</code></pre>
+<hr/>
+<p><strong>编制结论</strong>：项目目录骨架与架构图、数据库设计基本对齐，但当前处于&quot;<strong>能看不能跑</strong>&quot;状态——6 处阻断性缺陷使任何 <code>manage.py</code> 命令均失败。建议严格按 P0→P9 顺序推进，其中 <strong>P2 的自定义用户模型必须在首次迁移前落地</strong>，这是整个搭建过程中唯一不可回退的决策点。</p>
+</div>
+<div class="toolbar"><button onclick="window.print()">打印 / 导出 PDF</button></div>
+</body>
+</html>

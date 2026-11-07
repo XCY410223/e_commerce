@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# Django
+db.sqlite3
+/static_collected/
+/media/
+/static/index.html
+
+# 环境与密钥
+.env
+.env.*
+!.env.example
+.env.bak-*
+
+# 本地调试临时目录
+/work/
+/.docker-runtime/
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+/.docker-cli/

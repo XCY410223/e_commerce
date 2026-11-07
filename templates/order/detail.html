@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}订单详情 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">订单详情</h3>
+        <a class="muted" href="{% url 'order:list' %}">返回订单列表 &gt;</a>
+    </div>
+
+    <div class="order-head" style="margin-bottom:14px">
+        <span>订单号：{{ order.order_id }}</span>
+        <span>下单时间：{{ order.create_time|date:"Y-m-d H:i" }}</span>
+        <span><span class="{{ order.status_css_class }}">{{ order.status_label }}</span></span>
+    </div>
+
+    <table class="list">
+        <thead>
+        <tr>
+            <th>商品</th>
+            <th style="width:140px">成交单价</th>
+            <th style="width:80px">数量</th>
+            <th style="width:130px">小计</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for og in order.skus.all %}
+            <tr>
+                <td>{{ og.display_name }}</td>
+                <td>
+                    ¥{{ og.price }}
+                    {% if og.original_price and og.original_price != og.price %}
+                        <div class="price-original">原价 ¥{{ og.original_price }}</div>
+                    {% endif %}
+                    {% if og.promotion_name %}<div class="promo-tag">{{ og.promotion_name }}</div>{% endif %}
+                </td>
+                <td>{{ og.count }}</td>
+                <td>¥{{ og.amount }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4" class="muted">订单没有商品明细</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="cart-total" style="border:0;border-top:1px solid #e5e7eb;border-radius:0 0 6px 6px">
+        <span class="muted">共 {{ order.total_count }} 件</span>
+        <span class="muted">商品原价 ¥{{ order.total_amount }}</span>
+        {% if order.item_discount_amount > 0 %}<span class="muted discount-line">商品优惠 -¥{{ order.item_discount_amount }}</span>{% endif %}
+        {% if order.coupon_discount_amount > 0 %}<span class="muted discount-line">优惠券 -¥{{ order.coupon_discount_amount }}</span>{% endif %}
+        <span class="muted">运费 ¥{{ order.transit_price }}{% if order.shipping_discount_amount > 0 %}（已减 ¥{{ order.shipping_discount_amount }}）{% endif %}</span>
+        {% if order.total_discount_amount > 0 %}<span class="muted discount-line">优惠合计 -¥{{ order.total_discount_amount }}</span>{% endif %}
+        <span>{{ order.amount_label }}：<span class="amount">¥{{ order.display_amount }}</span></span>
+    </div>
+</div>
+
+<div class="card" id="comments">
+    <h3 class="card-title">商品评论</h3>
+    {% if not order.is_paid %}
+        <p class="muted">订单支付后可以对购买的商品发表评论。</p>
+    {% elif not comment_enabled %}
+        <p class="muted">评论功能暂时关闭，已提交的评论仍可查看。</p>
+    {% endif %}
+
+    {% for og in order.skus.all %}
+        <div class="comment-item">
+            <div class="comment-head">
+                <strong>{{ og.display_name }}</strong>
+                {% if og.review %}
+                    <span class="{{ og.review.status_css_class }}">{{ og.review.status_label }}</span>
+                {% endif %}
+            </div>
+
+            {% if og.review %}
+                <p class="comment-content">{{ og.review.content|linebreaksbr }}</p>
+                <p class="muted">
+                    提交时间：{{ og.review.create_time|date:"Y-m-d H:i" }}
+                    {% if og.review.is_rejected and og.review.audit_remark %}
+                        · 驳回原因：{{ og.review.audit_remark }}
+                    {% endif %}
+                </p>
+                {% if og.review.is_rejected and order.is_paid and comment_enabled %}
+                    <form method="post" action="{% url 'order:comment' og.id %}" class="comment-form">
+                        {% csrf_token %}
+                        <textarea name="content" rows="3" maxlength="{{ comment_max_length }}" required placeholder="修改后重新提交审核">{{ og.review.content }}</textarea>
+                        <button class="btn btn-primary" type="submit">重新提交评论</button>
+                    </form>
+                {% endif %}
+            {% elif order.is_paid and comment_enabled %}
+                <form method="post" action="{% url 'order:comment' og.id %}" class="comment-form">
+                    {% csrf_token %}
+                    <textarea name="content" rows="3" maxlength="{{ comment_max_length }}" required placeholder="说说这次购物的感受吧"></textarea>
+                    <button class="btn btn-primary" type="submit">提交评论</button>
+                </form>
+            {% elif not order.is_paid %}
+                <p class="muted">支付后可评论。</p>
+            {% else %}
+                <p class="muted">当前不可提交评论。</p>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p class="muted">订单没有商品明细。</p>
+    {% endfor %}
+</div>
+
+{% if order.promotions.all %}
+<div class="card">
+    <h3 class="card-title">活动优惠快照</h3>
+    <table class="list">
+        <thead><tr><th>活动</th><th>类型</th><th style="width:120px">优惠金额</th></tr></thead>
+        <tbody>
+        {% for item in order.promotions.all %}
+            <tr>
+                <td>{{ item.snapshot_name }}</td>
+                <td>{{ item.kind_label }}</td>
+                <td class="discount-line">-¥{{ item.discount_amount }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3 class="card-title">收货信息</h3>
+    <p>{{ order.display_receiver }} {{ order.display_phone }} —— {{ order.display_address }}</p>
+</div>
+
+<div class="card">
+    <h3 class="card-title">支付信息</h3>
+    <table class="list">
+        <tr><th style="width:120px">支付方式</th><td>{{ order.get_pay_method_display }}</td></tr>
+        <tr><th>支付状态</th><td><span class="{{ order.status_css_class }}">{{ order.status_label }}</span></td></tr>
+        <tr><th>支付流水号</th><td>{{ order.trade_no|default:"-" }}</td></tr>
+        <tr><th>支付时间</th><td>{{ order.pay_time|date:"Y-m-d H:i"|default:"-" }}</td></tr>
+        {% if order.is_cancelled %}
+            <tr><th>取消时间</th><td>{{ order.cancel_time|date:"Y-m-d H:i"|default:"-" }}</td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<p style="margin-top:18px">
+    <a class="btn" href="{% url 'order:list' %}">返回订单列表</a>
+    {% if order.is_unpaid %}
+        <a class="btn btn-primary" href="{% url 'order:pay' order.order_id %}">去支付</a>
+    {% endif %}
+</p>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}我的购物车 - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3 class="card-title">我的购物车</h3>
+
+    {% if removed_count %}
+        <div class="cart-alert">
+            购物车中有 {{ removed_count }} 件商品已下架或售罄，已自动移除。
+        </div>
+    {% endif %}
+
+    {% if items %}
+        <table class="list">
+            <thead>
+            <tr>
+                <th style="width:80px">图片</th>
+                <th>商品</th>
+                <th style="width:100px">单价</th>
+                <th style="width:150px">数量</th>
+                <th style="width:120px">小计</th>
+                <th style="width:90px">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                <tr data-cart-row="{{ item.sku.id }}">
+                    <td>
+                        {% if item.sku.primary_image %}
+                            <img src="{{ item.sku.primary_image.url }}" alt="{{ item.sku.name }}"
+                                 width="56" height="56" loading="lazy" decoding="async">
+                        {% else %}
+                            <span class="muted">无图</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'goods:detail' item.sku.id %}">{{ item.sku.name }}</a>
+                        <div class="muted">库存 {{ item.sku.stock }} {{ item.sku.unite }}</div>
+                    </td>
+                    <td>
+                        {% if item.pricing.has_discount %}
+                            <div class="price-promo">¥{{ item.pricing.unit_price }}</div>
+                            <div class="price-original">¥{{ item.pricing.original_unit_price }}</div>
+                            <div class="promo-tag">{{ item.pricing.promotion_name }}</div>
+                        {% else %}
+                            ¥{{ item.sku.price }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="qty" data-qty-max="{{ item.sku.stock }}">
+                            <button type="button" data-cart-update="{% url 'cart:update' item.sku.id %}"
+                                    data-step="-1"
+                                    data-expected="{{ item.count }}"
+                                    {% if item.count <= 1 %}disabled{% endif %}>-
+                            </button>
+                            <input type="text" value="{{ item.count }}" data-qty-input readonly>
+                            <button type="button" data-cart-update="{% url 'cart:update' item.sku.id %}"
+                                    data-step="1"
+                                    data-expected="{{ item.count }}">+
+                            </button>
+                        </div>
+                        {% if item.adjusted %}
+                            <div class="qty-note">已调整为库存上限 {{ item.count }} 件</div>
+                        {% endif %}
+                    </td>
+                    <td class="price" style="color:#e4393c;font-weight:700"
+                        data-cart-subtotal>¥{% if item.pricing %}{{ item.pricing.amount }}{% else %}{{ item.amount }}{% endif %}</td>
+                    <td>
+                        <button class="btn btn-danger" type="button"
+                                data-expected="{{ item.count }}"
+                                data-cart-delete="{% url 'cart:delete' item.sku.id %}">删除
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="cart-total" style="margin-top:16px">
+            <span class="muted">共 <b data-cart-total-count>{{ total_count }}</b> 件商品</span>
+            {% if quote and quote.item_discount > 0 %}
+                <span class="muted">活动优惠：-¥<span data-cart-item-discount>{{ quote.item_discount }}</span></span>
+            {% endif %}
+            {% if quote %}
+                {% if quote.shipping_discount > 0 %}
+                    <span class="promo-highlight" data-cart-shipping-note>已免运费</span>
+                {% elif quote.free_shipping_gap > 0 %}
+                    <span class="muted" data-cart-shipping-note>再买 ¥{{ quote.free_shipping_gap }} 免运费</span>
+                {% endif %}
+                <span class="muted">预计运费：¥<span data-cart-shipping-fee>{{ quote.shipping_fee }}</span></span>
+            {% endif %}
+            <span>商品合计：<span class="amount" data-cart-total-amount>¥{{ total_amount }}</span></span>
+            {% if quote %}<span class="muted">预计应付：¥<span data-cart-total-pay>{{ quote.total_pay }}</span></span>{% endif %}
+            {% if user.is_authenticated %}
+                <a class="btn btn-primary btn-lg" href="{% url 'order:place' %}">去结算</a>
+            {% else %}
+                <a class="btn btn-primary btn-lg"
+                   href="{% url 'user:login' %}?next={{ request.path|urlencode }}">登录后结算</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <p>购物车还是空的</p>
+            <p><a href="{% url 'goods:index' %}">去首页逛逛</a></p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

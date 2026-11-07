@@ -1,0 +1,15 @@
+Django==6.1.2
+PyMySQL>=1.1.1
+redis>=5.0,<6
+django-redis>=5.4
+Pillow>=10.4
+django-tinymce>=3.8
+python-dotenv>=1.0
+requests>=2.32
+itsdangerous>=2.2
+# 搜索查询侧中文分词（未安装时搜索自动退化为整串检索）
+jieba>=0.42
+# 异步任务（P7 阶段启用，Windows 下 worker 需加 --pool=solo）
+celery>=5.4
+# 支付宝支付适配器（仅 PAYMENT_PROVIDER=alipay 时需要安装）
+# python-alipay-sdk>=3.3.0

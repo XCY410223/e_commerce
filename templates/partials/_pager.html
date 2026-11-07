@@ -1,0 +1,32 @@
+{% comment %}
+通用分页片段。
+入参：
+    page_obj —— Paginator 的 Page 对象
+    page_range —— 可选，省略号页码序列；缺省时退回完整 page_range
+    querystring —— 可选，需要保留的查询串（不含 page），如 "sort=price"
+{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pager" aria-label="分页">
+    {% with qs=querystring|default:'' %}
+        {% if page_obj.has_previous %}
+            <a rel="prev" href="?{% if qs %}{{ qs }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">上一页</a>
+        {% endif %}
+
+        {% for i in page_range|default:page_obj.paginator.page_range %}
+            {% if i == page_obj.paginator.ELLIPSIS %}
+                <span class="muted">…</span>
+            {% elif i == page_obj.number %}
+                <span class="current" aria-current="page">{{ i }}</span>
+            {% else %}
+                <a href="?{% if qs %}{{ qs }}&amp;{% endif %}page={{ i }}">{{ i }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a rel="next" href="?{% if qs %}{{ qs }}&amp;{% endif %}page={{ page_obj.next_page_number }}">下一页</a>
+        {% endif %}
+
+        <span class="muted">共 {{ page_obj.paginator.count }} 条 / {{ page_obj.paginator.num_pages }} 页</span>
+    {% endwith %}
+</nav>
+{% endif %}

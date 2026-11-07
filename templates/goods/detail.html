@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sku.name }} - 天天生鲜{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="detail-wrap">
+        <div class="detail-gallery">
+            <div class="big">
+                {% if sku.primary_image %}
+                    <img src="{{ sku.primary_image.url }}" alt="{{ sku.name }}"
+                         width="360" height="340" fetchpriority="high" loading="eager" decoding="async">
+                {% else %}
+                    <span>暂无主图</span>
+                {% endif %}
+            </div>
+            {% if images %}
+                <div class="thumbs">
+                    {% for img in images %}
+                        <img src="{{ img.image.url }}" alt="{{ sku.name }}"
+                             width="66" height="66" loading="lazy" decoding="async">
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="detail-info">
+            <h2>{{ sku.name }}</h2>
+            <p class="desc">{{ sku.desc|default:"暂无商品简介" }}</p>
+
+            <div class="price-box">
+                {% if sku.has_promotion_price %}
+                    <span class="price">¥{{ sku.effective_price }}</span>
+                    <span class="price-original" style="margin-left:8px">¥{{ sku.original_price }}</span>
+                    <span class="promo-tag">{{ sku.promotion_name }}</span>
+                {% else %}
+                    <span class="price">¥{{ sku.price }}</span>
+                {% endif %}
+                <span class="unit">/ {{ sku.unite }}</span>
+            </div>
+
+            {% if spec_skus|length > 1 %}
+            <div class="form-row spec-row">
+                <label>规格</label>
+                <div class="spec-list">
+                    {% for s in spec_skus %}
+                        <a class="spec-item{% if s.id == sku.id %} active{% endif %}{% if s.stock <= 0 %} soldout{% endif %}"
+                           href="{% url 'goods:detail' s.id %}"
+                           {% if s.id == sku.id %}aria-current="page"{% endif %}>
+                            {{ s.spec|default:s.unite }}
+                            <small>{% if s.has_promotion_price %}¥{{ s.effective_price }}{% else %}¥{{ s.price }}{% endif %}</small>
+                            {% if s.stock <= 0 %}<em>缺货</em>{% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-row">
+                <label>库存</label>
+                <span>{{ sku.stock }} {{ sku.unite }}</span>
+            </div>
+            <div class="form-row">
+                <label>销量</label>
+                <span>{{ sku.sales }} 件</span>
+            </div>
+            <div class="form-row">
+                <label>分类</label>
+                <a href="{% url 'goods:list' sku.type.id %}">{{ sku.type.name }}</a>
+            </div>
+
+            <div class="form-row">
+                <label>数量</label>
+                <div class="qty">
+                    <button type="button" data-qty-minus>-</button>
+                    <input type="text" value="1" data-qty-input data-qty-max="{{ sku.stock }}">
+                    <button type="button" data-qty-plus>+</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                {% if sku.stock > 0 %}
+                    <button class="btn btn-primary btn-lg" data-add-cart="{% url 'cart:add' sku.id %}">加入购物车</button>
+                {% else %}
+                    <button class="btn btn-lg" disabled>暂时售罄</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h4 class="card-title">商品详情</h4>
+    <div class="spu-detail">
+        {% if sku.spu.detail %}
+            {{ sku.spu.detail|safe }}
+        {% else %}
+            <span class="muted">该商品暂无详细描述</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h4 class="card-title">商品评价{% if review_count %}（{{ review_count }}）{% endif %}</h4>
+    {% for review in reviews %}
+        <div class="comment-item">
+            <div class="comment-head">
+                <strong>{{ review.display_user }}</strong>
+                <span class="muted">{{ review.create_time|date:"Y-m-d H:i" }}</span>
+            </div>
+            <p class="comment-content">{{ review.content|linebreaksbr }}</p>
+        </div>
+    {% empty %}
+        <p class="muted">暂无已审核评价</p>
+    {% endfor %}
+</div>
+
+{% if new_skus %}
+<div class="card">
+    <h4 class="card-title">同类推荐</h4>
+    <div class="grid grid-5">
+        {% for s in new_skus %}
+            <a class="goods-card" href="{% url 'goods:detail' s.id %}">
+                <div class="thumb">
+                    {% if s.primary_image %}<img src="{{ s.primary_image.url }}" alt="{{ s.name }}"
+                                                 width="150" height="150" loading="lazy" decoding="async">{% else %}<span>暂无图片</span>{% endif %}
+                </div>
+                <div class="name">{{ s.name }}</div>
+                <div class="price">¥{% if s.has_promotion_price %}{{ s.effective_price }}{% else %}{{ s.price }}{% endif %}</div>
+                {% if s.has_promotion_price %}<div class="promo-tag">{{ s.promotion_name }}</div>{% endif %}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if history_skus %}
+<div class="card">
+    <h4 class="card-title">最近浏览</h4>
+    <div class="grid grid-5">
+        {% for s in history_skus %}
+            <a class="goods-card" href="{% url 'goods:detail' s.id %}">
+                <div class="thumb">
+                    {% if s.primary_image %}<img src="{{ s.primary_image.url }}" alt="{{ s.name }}"
+                                                 width="150" height="150" loading="lazy" decoding="async">{% else %}<span>暂无图片</span>{% endif %}
+                </div>
+                <div class="name">{{ s.name }}</div>
+                <div class="price">¥{% if s.has_promotion_price %}{{ s.effective_price }}{% else %}{{ s.price }}{% endif %}</div>
+                {% if s.has_promotion_price %}<div class="promo-tag">{{ s.promotion_name }}</div>{% endif %}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

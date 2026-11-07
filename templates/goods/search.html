@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{% if keyword %}搜索「{{ keyword }}」{% else %}商品搜索{% endif %} - 天天生鲜{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex,follow">
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="floor-head">
+        <h3 class="card-title mt0">搜索结果</h3>
+        {% if keyword %}
+            <div class="muted">
+                排序：
+                <a href="?q={{ keyword|urlencode }}&amp;sort=relevance" {% if sort == 'relevance' %}style="color:#37ab40;font-weight:600"{% endif %}>综合</a> |
+                <a href="?q={{ keyword|urlencode }}&amp;sort=price" {% if sort == 'price' %}style="color:#37ab40;font-weight:600"{% endif %}>价格</a> |
+                <a href="?q={{ keyword|urlencode }}&amp;sort=sales" {% if sort == 'sales' %}style="color:#37ab40;font-weight:600"{% endif %}>销量</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if keyword %}
+        <p class="muted">关键词「{{ keyword }}」共匹配到 {{ page_obj.paginator.count }} 件商品</p>
+
+        <div class="grid grid-5">
+            {% for sku in page_obj %}
+                <a class="goods-card" href="{% url 'goods:detail' sku.id %}">
+                    <div class="thumb">
+                        {% if sku.primary_image %}<img src="{{ sku.primary_image.url }}" alt="{{ sku.name }}"
+                                                      width="150" height="150" loading="lazy" decoding="async">
+                        {% else %}<span>暂无图片</span>{% endif %}
+                    </div>
+                    <div class="name">{{ sku.name }}</div>
+                    {% if sku.has_promotion_price %}
+                        <div class="price">¥{{ sku.effective_price }}<small>/{{ sku.unite }}</small></div>
+                        <div class="price-original">¥{{ sku.original_price }}</div>
+                        <div class="promo-tag">{{ sku.promotion_name }}</div>
+                    {% else %}
+                        <div class="price">¥{{ sku.price }}<small>/{{ sku.unite }}</small></div>
+                    {% endif %}
+                    <div class="muted">已售 {{ sku.sales }} 件</div>
+                </a>
+            {% empty %}
+                <div class="muted">没有找到相关商品</div>
+            {% endfor %}
+        </div>
+
+        {% include "partials/_pager.html" %}
+    {% else %}
+        <p class="muted">请输入关键词后再搜索</p>
+    {% endif %}
+</div>
+{% endblock %}
