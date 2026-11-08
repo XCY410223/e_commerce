@@ -1,7 +1,7 @@
 Django==6.1.2
 PyMySQL>=1.1.1
 redis>=6.1,<7
-django-redis>=5.4
+django-redis>=7.0.0
 Pillow>=10.4
 django-tinymce>=3.8
 python-dotenv>=1.0
