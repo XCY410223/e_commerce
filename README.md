@@ -95,6 +95,16 @@ Invoke-WebRequest http://127.0.0.1:8888/healthz -UseBasicParsing
 
 `import_site_images` 同样支持 `--dry-run`、`--overwrite`，以及 `--kind banner|promo|logo` 只处理某一类。
 
+### 重新生成演示占位图
+
+演示数据中的商品图、轮播图和分类图由 Pillow 现场生成。Linux 服务器需要中文字体，否则中文会退化成方框或极小号默认字体，看起来像“图片没有显示”。Ubuntu/Debian 安装 `fonts-wqy-zenhei` 后执行：
+
+```bash
+python manage.py refresh_demo_images
+```
+
+命令会替换现有演示图片、清理旧文件并自动重建静态页；`--dry-run` 可先查看影响范围，`--skip-static` 可跳过静态页重建。
+
 ## 三、目录结构
 
 ```
