@@ -2,6 +2,10 @@
 
 Django 6.1.2 + MySQL + Redis 的 B2C 生鲜电商骨架项目（服务端渲染模板）。
 
+> **公开仓库说明**：仓库中的账号、收货地址、手机号和密钥均为演示占位数据，不代表真实用户信息。
+> 请勿向仓库提交真实 `.env`、支付私钥、SSH 私钥或生产数据库导出；安全问题请按
+> [SECURITY.md](SECURITY.md) 私下报告。
+
 ## 一、快速启动
 
 ```bash
@@ -9,10 +13,18 @@ Django 6.1.2 + MySQL + Redis 的 B2C 生鲜电商骨架项目（服务端渲染�
 git clone https://github.com/XCY410223/e_commerce.git
 cd e_commerce
 python -m venv .venv
-.venv\Scripts\activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# macOS / Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 
 # 2. 复制环境变量模板并按本机环境修改
+# Windows PowerShell
+Copy-Item .env.example .env
+# macOS / Linux
 cp .env.example .env
 
 # 3. 环境自检（依赖 / MySQL / Redis / 业务表）
@@ -110,7 +122,7 @@ python manage.py refresh_demo_images
 ```
 e_commerce/
 ├── manage.py
-├── requirements.txt / .env / .env.example / .gitignore
+├── requirements.txt / .env.example / .gitignore
 ├── apps/
 │   ├── user/    注册/邮件激活/登录/退出/个人中心/收货地址
 │   ├── goods/   首页/分类列表/详情/全文搜索/浏览历史
@@ -364,9 +376,8 @@ python manage.py retry_cart_cleanup           # 重试 Redis 清理失败的购�
 1. **自定义用户模型必须先于首次 migrate**：`AUTH_USER_MODEL="user.User"` 已设置，
    一旦先建了 `auth_user` 再切换，只能清库重来。
 2. **Windows 版 Redis 5.0 不支持 RESP3**：`redis-py` 6+ 默认发 `HELLO` 会报
-   `unknown command HELLO`。`requirements.txt` 已约束 `redis>=5.0,<6` 使用 RESP2，
-   同时 Django cache 在 `CONNECTION_POOL_KWARGS` 中显式设置 `protocol=2`。
-   Celery 也必须使用该依赖范围，否则任务投递阶段就会失败。
+   `unknown command HELLO`。项目在 `CONNECTION_POOL_KWARGS` 中显式设置
+   `protocol=2`，`REDIS_PROTOCOL=2` 可覆盖；使用 Redis 6+ 时可改为 `3`。
 3. **Celery 在 Windows 必须 `--pool=solo`**：`celery -A config.celery worker -l info --pool=solo`。
 4. **`apps/` 包名与 INSTALLED_APPS 写法二选一**：当前用 `sys.path.insert` + 裸 app 名
    （`user` / `goods` / `cart` / `order`），`AppConfig.name` 必须同步为裸名，不可混用 `apps.user`。

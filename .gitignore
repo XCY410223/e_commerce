@@ -21,6 +21,18 @@ db.sqlite3
 .env.*
 !.env.example
 .env.bak-*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+alipay.env
+
+# 本地部署与凭据
+/deploy/
+known_hosts
+vm_known_hosts
 
 # 本地调试临时目录
 /work/

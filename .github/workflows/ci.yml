@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: e_commerce
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-production-secret
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+      DB_ENGINE: mysql
+      DB_NAME: e_commerce
+      DB_USER: root
+      DB_PASSWORD: ci-root-password
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      REDIS_URL: redis://127.0.0.1:6379/0
+      REDIS_PROTOCOL: "2"
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/1
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+      STATIC_PAGES_ENABLED: "1"
+      STATIC_PAGES_AUTO_REFRESH: "0"
+      PAYMENT_PROVIDER: mock
+      PAYMENT_MOCK_SECRET: ci-only-payment-secret
+      STORAGE_BACKEND: django.core.files.storage.FileSystemStorage
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install "jieba>=0.42" --no-build-isolation
+          python -m pip install -r requirements.txt
+
+      - name: Django checks
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        run: python manage.py test -v 2
