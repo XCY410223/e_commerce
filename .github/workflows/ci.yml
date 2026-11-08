@@ -58,7 +58,8 @@ jobs:
       CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
       STATIC_PAGES_ENABLED: "1"
       STATIC_PAGES_AUTO_REFRESH: "0"
-      PAYMENT_PROVIDER: mock
+      # Django 测试运行器会强制 DEBUG=False，使用非 mock 渠道才能通过生产配置检查
+      PAYMENT_PROVIDER: alipay
       PAYMENT_MOCK_SECRET: ci-only-payment-secret
       STORAGE_BACKEND: django.core.files.storage.FileSystemStorage
 
