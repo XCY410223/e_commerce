@@ -445,6 +445,19 @@ PROMOTIONS = [
         "cta_text": "查看活动商品",
         "cta_url": "",
     },
+    {
+        "slug": "invite-friends",
+        "name": "邀请好友得优惠券",
+        "summary": "邀请好友注册并完成首单，你和好友都能获得优惠券。",
+        "rules": (
+            "1. 好友通过你的邀请链接注册。\n"
+            "2. 好友完成首单支付后发放邀请奖励券。\n"
+            "3. 具体奖励以个人中心展示为准。"
+        ),
+        "category": None,
+        "cta_text": "去邀请好友",
+        "cta_url": "/user/center/",
+    },
 ]
 
 DEMO_USER = {"username": "demo", "password": "demo1234", "email": "demo@ecommerce.local"}
