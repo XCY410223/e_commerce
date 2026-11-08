@@ -1,6 +1,6 @@
 Django==6.1.2
 PyMySQL>=1.1.1
-redis>=5.0,<6
+redis>=6.1,<7
 django-redis>=5.4
 Pillow>=10.4
 django-tinymce>=3.8

@@ -56,6 +56,9 @@ from promotion.defaults import default_promotion_rules  # noqa: E402
 FONT_CANDIDATES = [
     "C:/Windows/Fonts/msyh.ttc",  # 微软雅黑
     "C:/Windows/Fonts/simhei.ttf",
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",  # 文泉驿正黑（Ubuntu/Debian）
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
 ]
 PALETTE = [
     (232, 245, 233), (252, 240, 232), (232, 240, 252), (248, 232, 245),
